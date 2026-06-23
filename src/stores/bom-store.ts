@@ -11,9 +11,9 @@ interface BOMState {
   setEntries: (entries: BOMEntry[]) => void;
   setCostBreakdown: (breakdown: CostBreakdown) => void;
   recalculate: (entries: BOMEntry[]) => void;
-  filterBySource: (source: SourceType | 'all') => BOMEntry[];
-  filterByCategory: (category: PartCategory | 'all') => BOMEntry[];
-  reset: () => void;
+  filterBySource: (source: SourceType | 'all') => BOMEntry[]
+  filterByCategory: (category: PartCategory | 'all') => BOMEntry[]
+  reset: () => void
 }
 
 const emptyCostBreakdown: CostBreakdown = {

@@ -121,6 +121,7 @@ export function getMockResponse(
   const totalCost = result.parts.reduce((sum, p) => sum + p.unitCost, 0);
 
   const requirements: RequirementsSpec = {
+    pillar: 'physical',
     projectName: result.projectName,
     projectType: result.template,
     description: result.projectDescription,
