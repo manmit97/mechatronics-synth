@@ -47,10 +47,13 @@ const iconMap = {
 // ─── Oscilloscope Screen Animation ───────────────────────────────────────────
 
 function OscilloscopeTraces({ selectedPillar }: { selectedPillar: ServicePillar | null }) {
-  // Generate random SVG paths to simulate waveforms
+  // Generate a scrolling continuous SVG to simulate lively waveforms
   return (
-    <div className="absolute inset-0 z-10 pointer-events-none opacity-80 mix-blend-screen">
-      <svg className="w-full h-full" preserveAspectRatio="none">
+    <div className="absolute inset-0 z-10 pointer-events-none opacity-80 mix-blend-screen overflow-hidden animate-crt">
+      {/* Scanner Line */}
+      <div className="absolute top-0 bottom-0 w-[3px] bg-[#4ade80] shadow-[0_0_20px_2px_#4ade80] mix-blend-screen animate-scanline z-20" />
+      
+      <svg className="h-full animate-wave-scroll" style={{ width: '200%' }} viewBox="0 0 200 100" preserveAspectRatio="none">
         <defs>
           <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="2" result="blur" />
@@ -64,20 +67,20 @@ function OscilloscopeTraces({ selectedPillar }: { selectedPillar: ServicePillar 
           const opacity = isActive ? 1 : 0.2;
           const yOffset = 25 + (i * 16.6); // 4 traces distributed evenly
           
-          // Generate a wave path based on the domain type
+          // Double-length path so we can infinitely scroll 50% of the SVG width
           let pathD = '';
           if (pillar.id === 'digital') {
-            // Square wave
-            pathD = `M 0 ${yOffset} L 10 ${yOffset} L 10 ${yOffset-5} L 30 ${yOffset-5} L 30 ${yOffset} L 50 ${yOffset} L 50 ${yOffset+5} L 70 ${yOffset+5} L 70 ${yOffset} L 100 ${yOffset}`;
+            // Square wave repeated
+            pathD = `M 0 ${yOffset} L 10 ${yOffset} L 10 ${yOffset-5} L 30 ${yOffset-5} L 30 ${yOffset} L 50 ${yOffset} L 50 ${yOffset+5} L 70 ${yOffset+5} L 70 ${yOffset} L 90 ${yOffset} L 90 ${yOffset-5} L 110 ${yOffset-5} L 110 ${yOffset} L 130 ${yOffset} L 130 ${yOffset+5} L 150 ${yOffset+5} L 150 ${yOffset} L 170 ${yOffset} L 170 ${yOffset-5} L 190 ${yOffset-5} L 190 ${yOffset} L 200 ${yOffset}`;
           } else if (pillar.id === 'physical') {
-            // Sine wave approximation
-            pathD = `M 0 ${yOffset} Q 12.5 ${yOffset-10} 25 ${yOffset} T 50 ${yOffset} T 75 ${yOffset} T 100 ${yOffset}`;
+            // Sine wave approx repeated
+            pathD = `M 0 ${yOffset} Q 12.5 ${yOffset-10} 25 ${yOffset} T 50 ${yOffset} T 75 ${yOffset} T 100 ${yOffset} T 125 ${yOffset} T 150 ${yOffset} T 175 ${yOffset} T 200 ${yOffset}`;
           } else if (pillar.id === 'integrated') {
-            // Eye diagram approximation / messy triangle
-            pathD = `M 0 ${yOffset} L 15 ${yOffset-8} L 30 ${yOffset+8} L 45 ${yOffset-4} L 60 ${yOffset+6} L 75 ${yOffset-2} L 90 ${yOffset+5} L 100 ${yOffset}`;
+            // Eye diagram approx repeated
+            pathD = `M 0 ${yOffset} L 15 ${yOffset-8} L 30 ${yOffset+8} L 45 ${yOffset-4} L 60 ${yOffset+6} L 75 ${yOffset-2} L 90 ${yOffset+5} L 100 ${yOffset} L 115 ${yOffset-8} L 130 ${yOffset+8} L 145 ${yOffset-4} L 160 ${yOffset+6} L 175 ${yOffset-2} L 190 ${yOffset+5} L 200 ${yOffset}`;
           } else {
-            // Additive / Noise
-            pathD = `M 0 ${yOffset} L 5 ${yOffset-2} L 10 ${yOffset+3} L 15 ${yOffset-1} L 20 ${yOffset+4} L 25 ${yOffset-3} L 30 ${yOffset+2} L 35 ${yOffset-1} L 100 ${yOffset}`;
+            // Additive / Noise repeated
+            pathD = `M 0 ${yOffset} L 5 ${yOffset-2} L 10 ${yOffset+3} L 15 ${yOffset-1} L 20 ${yOffset+4} L 25 ${yOffset-3} L 30 ${yOffset+2} L 35 ${yOffset-1} L 40 ${yOffset+3} L 45 ${yOffset-2} L 50 ${yOffset+1} L 55 ${yOffset-4} L 60 ${yOffset+2} L 65 ${yOffset-1} L 70 ${yOffset+4} L 75 ${yOffset-2} L 80 ${yOffset+1} L 85 ${yOffset-3} L 90 ${yOffset+2} L 95 ${yOffset-1} L 100 ${yOffset} L 105 ${yOffset-2} L 110 ${yOffset+3} L 115 ${yOffset-1} L 120 ${yOffset+4} L 125 ${yOffset-3} L 130 ${yOffset+2} L 135 ${yOffset-1} L 140 ${yOffset+3} L 145 ${yOffset-2} L 150 ${yOffset+1} L 155 ${yOffset-4} L 160 ${yOffset+2} L 165 ${yOffset-1} L 170 ${yOffset+4} L 175 ${yOffset-2} L 180 ${yOffset+1} L 185 ${yOffset-3} L 190 ${yOffset+2} L 195 ${yOffset-1} L 200 ${yOffset}`;
           }
 
           return (
@@ -91,8 +94,6 @@ function OscilloscopeTraces({ selectedPillar }: { selectedPillar: ServicePillar 
               filter="url(#glow)"
               opacity={opacity}
               className="transition-opacity duration-300"
-              transform="scale(10, 1) translate(0, 0)" // stretch across
-              // To make it animate we'd normally use a stroke-dashoffset animation
             />
           );
         })}
@@ -117,20 +118,30 @@ function ChannelStrip({
   const config = PILLAR_CONFIGS[pillarId];
 
   return (
-    <div className="flex flex-col items-center bg-[#1e1f22] border border-[#374151] rounded-lg p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+    <div 
+      className={`flex flex-col items-center rounded-lg p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] transition-all duration-300 cursor-pointer group hover:bg-[#25262a]`}
+      style={{
+        backgroundColor: '#1e1f22',
+        borderColor: isSelected ? config.accentColor : '#374151',
+        borderWidth: 1,
+        borderStyle: 'solid',
+        boxShadow: isSelected ? `0 0 20px ${config.accentColor}33, inset 0 2px 4px rgba(0,0,0,0.5)` : undefined
+      }}
+      onClick={() => onSelect(pillarId)}
+    >
       
       {/* Channel Header */}
-      <div className="w-full text-center border-b border-[#374151] pb-2 mb-4">
+      <div className="w-full text-center border-b border-[#374151] pb-2 mb-4 group-hover:border-[#4b5563] transition-colors">
         <span className="text-[10px] font-mono font-bold tracking-widest text-[#9ca3af]">
           CH {index + 1}
         </span>
-        <h3 className="text-xs font-bold font-sans mt-1 uppercase" style={{ color: config.accentColor }}>
+        <h3 className="text-xs font-bold font-sans mt-1 uppercase transition-all duration-300 group-hover:brightness-125" style={{ color: config.accentColor }}>
           {config.name}
         </h3>
       </div>
 
       {/* BNC Connector */}
-      <div className="mb-6 relative">
+      <div className="mb-6 relative transition-transform duration-300 group-hover:scale-105">
         <div className="bnc-connector">
           <div className="bnc-inner">
             <div className="bnc-pin" />
@@ -138,14 +149,14 @@ function ChannelStrip({
         </div>
         {/* Color coded ring */}
         <div 
-          className="bnc-ring" 
-          style={{ borderColor: config.accentColor, opacity: 0.6 }} 
+          className="bnc-ring transition-opacity duration-300" 
+          style={{ borderColor: config.accentColor, opacity: isSelected ? 1 : 0.6 }} 
         />
       </div>
 
       {/* Vertical Scale Knob */}
       <div className="osc-knob-container mb-6">
-        <div className="osc-knob osc-knob-sm" style={{ transform: `rotate(${-45 + index * 30}deg)` }}>
+        <div className="osc-knob osc-knob-sm transition-transform duration-500 ease-out group-hover:rotate-12" style={{ transform: `rotate(${-45 + index * 30}deg)` }}>
           <div className="osc-knob-indicator" />
         </div>
         <span className="text-[8px] font-mono text-[#6b7280] uppercase tracking-widest mt-1">SCALE</span>
@@ -153,12 +164,11 @@ function ChannelStrip({
 
       {/* Activation Button */}
       <button 
-        onClick={() => onSelect(pillarId)}
         className={`w-full osc-button py-2 text-[10px] flex items-center justify-center gap-1.5 ${isSelected ? 'active' : ''}`}
         style={{ borderTopColor: isSelected ? config.accentColor : '#4b5563' }}
       >
         <span 
-          className={`osc-led ${isSelected ? 'active' : ''}`}
+          className={`osc-led ${isSelected ? 'active animate-pulse-dot' : ''}`}
           style={{ '--led-color': config.accentColor } as React.CSSProperties}
         />
         {isSelected ? 'ACTIVE' : 'SELECT'}

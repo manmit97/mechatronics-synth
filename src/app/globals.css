@@ -443,12 +443,43 @@ body {
   50% { opacity: 0.3; }
 }
 
+@keyframes wave-scroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scanline {
+  0% { left: -5%; opacity: 0; }
+  5% { opacity: 0.8; }
+  95% { opacity: 0.8; }
+  100% { left: 105%; opacity: 0; }
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 0.85; }
+  25%, 75% { opacity: 0.9; }
+}
+
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
 
 .animate-pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.animate-wave-scroll {
+  animation: wave-scroll 6s linear infinite;
+  will-change: transform;
+}
+
+.animate-scanline {
+  animation: scanline 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-crt {
+  animation: crt-flicker 0.15s infinite;
 }
 
 /* Staggered children animations */
