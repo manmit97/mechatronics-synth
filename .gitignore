@@ -39,3 +39,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.hermes/plans/2026-06-25_143000-real-synthesis-agent.md

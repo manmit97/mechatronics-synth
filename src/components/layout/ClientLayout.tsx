@@ -31,7 +31,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
-      {!isLanding && <Footer />}
+      <Footer />
       {/* Persistent chat system (not on landing — landing has inline chat) */}
       {!isLanding && (
         <>

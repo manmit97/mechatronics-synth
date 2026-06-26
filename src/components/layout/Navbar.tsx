@@ -145,7 +145,7 @@ export function Navbar() {
               <Activity className="w-4 h-4 text-[#4ade80]" />
             </div>
             <span className="text-md font-bold tracking-widest silkscreen-header text-[#f3f4f6]">
-              KEYSIGHT<span className="text-stone-500 font-normal"> / LAB</span>
+              MECHATRONICS SYNTH<span className="text-stone-500 font-normal"> LAB</span>
             </span>
           </Link>
 
