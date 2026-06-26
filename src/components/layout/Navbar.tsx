@@ -79,6 +79,7 @@ export function Navbar() {
   const [showSettings, setShowSettings] = useState(false);
   const [currentTone, setCurrentTone] = useState<AudioTone>('synth');
   const [selectedTone, setSelectedTone] = useState<AudioTone>('synth');
+  const [devPopup, setDevPopup] = useState<{ show: boolean, feature: string }>({ show: false, feature: '' });
 
   // Sync mute state and audio tone on client load
   useEffect(() => {
@@ -187,14 +188,12 @@ export function Navbar() {
                       style={{ '--led-color': pillarConfig ? pillarConfig.accentColor : '#4ade80' } as React.CSSProperties}
                     />
                     <Link
-                      href={isDisabled ? '#' : href}
+                      href="#"
                       className={`osc-button px-3.5 py-1.5 flex items-center gap-2 ${isActive ? 'active' : ''}`}
                       onClick={(e) => {
-                        if (isDisabled) {
-                          e.preventDefault();
-                        } else {
-                          playClickSound(!isActive);
-                        }
+                        e.preventDefault();
+                        playClickSound(false);
+                        setDevPopup({ show: true, feature: label });
                       }}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -355,6 +354,47 @@ export function Navbar() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Feature Under Development Modal */}
+      {devPopup.show && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setDevPopup({ show: false, feature: '' })}
+        >
+          <div 
+            className="osc-chassis w-80 p-5 bg-[#1e1f22] relative shadow-2xl text-[#f3f4f6] border border-[#374151]"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <div className="absolute top-2 left-2"><span className="screw" /></div>
+            <div className="absolute top-2 right-2"><span className="screw" /></div>
+            <div className="absolute bottom-2 left-2"><span className="screw" /></div>
+            <div className="absolute bottom-2 right-2"><span className="screw" /></div>
+
+            <div className="text-center pb-3 border-b border-[#374151] mb-4">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-[#facc15] block">SYSTEM NOTIFICATION</span>
+              <h2 className="text-xs font-bold font-mono tracking-wider text-[#f3f4f6] uppercase mt-1">{devPopup.feature} MODULE</h2>
+            </div>
+
+            <div className="mb-5 text-center">
+              <p className="text-[11px] font-mono text-[#9ca3af] leading-relaxed">
+                This feature is currently under development. Check back later for updates.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 border-t border-[#374151] pt-3.5">
+              <button
+                onClick={() => {
+                  playClickSound(true);
+                  setDevPopup({ show: false, feature: '' });
+                }}
+                className="w-full osc-button py-2 text-[10px] text-center font-bold text-[#f3f4f6]"
+              >
+                ACKNOWLEDGE
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -346,7 +346,7 @@ export default function LandingPage() {
               <Cpu className="w-3.5 h-3.5" style={{ color: pillarConfig.accentColor }} />
               INSTRUMENT CHASSIS SPEC // 2026
             </div>
-            <div>MECHANICAL × ELECTRONICAL × SOFTWARE</div>
+            <div>MECHANICAL × ELECTRONICS × SOFTWARE</div>
           </div>
         </footer>
       </div>
