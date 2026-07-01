@@ -2,8 +2,10 @@
 
 import { useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, ContactShadows, TransformControls, GizmoHelper, GizmoViewcube } from '@react-three/drei';
+import { Geometry, Base, Subtraction, Addition } from '@react-three/csg';
 import { useConfiguratorStore } from '@/stores/configurator-store';
+import { ZoomControls } from './ZoomControls';
 import * as THREE from 'three';
 
 // ─── Procedural Part Renderer ───────────────────────────────────────────────
@@ -33,13 +35,35 @@ function ProceduralMesh({ config, color, isSelected, onClick }: {
       castShadow
       receiveShadow
     >
-      {config.baseShape === 'cylinder' ? (
-        <cylinderGeometry args={[w / 2, w / 2, h, 32]} />
-      ) : config.baseShape === 'sphere' ? (
-        <sphereGeometry args={[w / 2, 32, 32]} />
-      ) : (
-        <boxGeometry args={[w, h, d]} />
-      )}
+      <Geometry>
+        <Base>
+          {config.baseShape === 'cylinder' ? (
+            <cylinderGeometry args={[w / 2, w / 2, h, 32]} />
+          ) : config.baseShape === 'sphere' ? (
+            <sphereGeometry args={[w / 2, 32, 32]} />
+          ) : (
+            <boxGeometry args={[w, h, d]} />
+          )}
+        </Base>
+        {config.features?.map((feature, i) => {
+          const isSubtraction = ['hole', 'slot', 'bevel', 'fillet'].includes(feature.type);
+          const Op = isSubtraction ? Subtraction : Addition;
+          const fw = feature.dimensions.width || 0.1;
+          const fh = feature.dimensions.height || 0.1;
+          const fd = feature.dimensions.depth || 0.1;
+          const fr = feature.dimensions.radius || 0.1;
+
+          return (
+            <Op key={i} position={feature.position}>
+              {feature.type === 'hole' || feature.type === 'shaft' ? (
+                <cylinderGeometry args={[fr, fr, fh || d, 16]} />
+              ) : (
+                <boxGeometry args={[fw, fh, fd]} />
+              )}
+            </Op>
+          );
+        })}
+      </Geometry>
       <meshStandardMaterial
         color={color}
         {...materialProps}
@@ -48,13 +72,35 @@ function ProceduralMesh({ config, color, isSelected, onClick }: {
       />
       {isSelected && (
         <mesh scale={[1.05, 1.05, 1.05]}>
-          {config.baseShape === 'cylinder' ? (
-            <cylinderGeometry args={[w / 2, w / 2, h, 32]} />
-          ) : config.baseShape === 'sphere' ? (
-            <sphereGeometry args={[w / 2, 32, 32]} />
-          ) : (
-            <boxGeometry args={[w, h, d]} />
-          )}
+          <Geometry>
+            <Base>
+              {config.baseShape === 'cylinder' ? (
+                <cylinderGeometry args={[w / 2, w / 2, h, 32]} />
+              ) : config.baseShape === 'sphere' ? (
+                <sphereGeometry args={[w / 2, 32, 32]} />
+              ) : (
+                <boxGeometry args={[w, h, d]} />
+              )}
+            </Base>
+            {config.features?.map((feature, i) => {
+              const isSubtraction = ['hole', 'slot', 'bevel', 'fillet'].includes(feature.type);
+              const Op = isSubtraction ? Subtraction : Addition;
+              const fw = feature.dimensions.width || 0.1;
+              const fh = feature.dimensions.height || 0.1;
+              const fd = feature.dimensions.depth || 0.1;
+              const fr = feature.dimensions.radius || 0.1;
+
+              return (
+                <Op key={i} position={feature.position}>
+                  {feature.type === 'hole' || feature.type === 'shaft' ? (
+                    <cylinderGeometry args={[fr, fr, fh || d, 16]} />
+                  ) : (
+                    <boxGeometry args={[fw, fh, fd]} />
+                  )}
+                </Op>
+              );
+            })}
+          </Geometry>
           <meshBasicMaterial color="#06b6d4" wireframe transparent opacity={0.15} />
         </mesh>
       )}
@@ -78,6 +124,16 @@ function RobotAssembly() {
         const partDef = catalog.find((p) => p.id === placed.partId);
         if (!partDef?.asset.proceduralConfig) return null;
 
+        const isSelected = selectedId === placed.instanceId;
+        const meshElement = (
+          <ProceduralMesh
+            config={partDef.asset.proceduralConfig}
+            color={placed.color}
+            isSelected={isSelected}
+            onClick={() => selectPart(placed.instanceId)}
+          />
+        );
+
         return (
           <group
             key={placed.instanceId}
@@ -85,12 +141,24 @@ function RobotAssembly() {
             rotation={placed.rotation.map((r) => r * Math.PI / 180) as [number, number, number]}
             scale={placed.scale}
           >
-            <ProceduralMesh
-              config={partDef.asset.proceduralConfig}
-              color={placed.color}
-              isSelected={selectedId === placed.instanceId}
-              onClick={() => selectPart(placed.instanceId)}
-            />
+            {isSelected ? (
+              <TransformControls
+                mode="translate"
+                onMouseUp={(e) => {
+                  const target = e?.target as any;
+                  if (target?.object) {
+                    const obj = target.object;
+                    useConfiguratorStore.getState().updatePartTransform(placed.instanceId, {
+                      position: [obj.position.x, obj.position.y, obj.position.z],
+                    });
+                  }
+                }}
+              >
+                {meshElement}
+              </TransformControls>
+            ) : (
+              meshElement
+            )}
           </group>
         );
       })}
@@ -136,6 +204,15 @@ function SceneContent() {
         maxDistance={20}
         maxPolarAngle={Math.PI / 2.1}
       />
+      
+      <GizmoHelper
+        alignment="top-right"
+        margin={[80, 80]}
+      >
+        <GizmoViewcube />
+      </GizmoHelper>
+
+      <ZoomControls />
     </>
   );
 }
