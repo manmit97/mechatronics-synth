@@ -245,21 +245,28 @@ export default function LandingPage() {
 
   const hasDesign = catalog.length > 0 && currentPillar;
 
-  const [selectedPillar, setSelectedPillar] = useState<ServicePillar | null>(currentPillar || null);
-  const [showWorkspace, setShowWorkspace] = useState(!!hasDesign);
+  const showWorkspace = useProjectStore((s) => s.showWorkspace);
+  const setShowWorkspace = useProjectStore((s) => s.setShowWorkspace);
+  const selectedPillar = currentPillar;
 
   // Apply pillar theme to <html> for global CSS variables if needed
   useEffect(() => {
-    if (selectedPillar) {
-      document.documentElement.setAttribute('data-pillar', selectedPillar);
+    if (currentPillar) {
+      document.documentElement.setAttribute('data-pillar', currentPillar);
     } else {
       document.documentElement.removeAttribute('data-pillar');
     }
-  }, [selectedPillar]);
+  }, [currentPillar]);
+
+  // Auto-open workspace if we have a design on initial load
+  useEffect(() => {
+    if (hasDesign && !showWorkspace) {
+      setShowWorkspace(true);
+    }
+  }, [hasDesign, showWorkspace, setShowWorkspace]);
 
   const handlePillarSelect = (pillarId: ServicePillar) => {
     playConnectSound();
-    setSelectedPillar(pillarId);
     setPillar(pillarId);
 
     // Transition to workspace after a brief delay
@@ -271,7 +278,7 @@ export default function LandingPage() {
   const handleBackToSelection = () => {
     playClickSound(false);
     setShowWorkspace(false);
-    setSelectedPillar(null);
+    // Note: We don't clear the pillar so they can easily re-enter
   };
 
   // ─── Workspace View (Configurator / Sim) ───────────────────────────────────
@@ -279,7 +286,7 @@ export default function LandingPage() {
     const pillarConfig = PILLAR_CONFIGS[selectedPillar];
 
     return (
-      <div className="flex-1 flex flex-col p-4 bg-[#121212] relative">
+      <div className="flex-1 flex flex-col p-4 bg-[#121212] relative min-h-0 overflow-hidden">
 
         {/* Workspace Control Strip Header */}
         <div className="flex items-center gap-3 px-6 py-2.5 osc-faceplate rounded shadow-md mb-3 justify-between relative border border-[#374151]">
@@ -316,7 +323,7 @@ export default function LandingPage() {
         {/* Split View Console Frame */}
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-4 mb-3">
           {/* Oscilloscope Chat Terminal (left) */}
-          <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 osc-screen flex flex-col h-[520px] lg:h-auto">
+          <div className="flex-1 lg:flex-none w-full lg:w-[460px] xl:w-[500px] shrink-0 osc-screen flex flex-col min-h-[300px] lg:min-h-0">
             <div className="absolute top-2 right-4 text-[9px] font-mono text-[#374151] pointer-events-none select-none">
               TERMINAL // TELEMETRY
             </div>
@@ -324,7 +331,7 @@ export default function LandingPage() {
           </div>
 
           {/* Oscilloscope 3D Simulator (right) */}
-          <div className="flex-1 osc-chassis relative min-h-[400px] lg:min-h-0 flex flex-col">
+          <div className="flex-1 osc-chassis relative min-h-[300px] lg:min-h-0 flex flex-col">
             <div className="absolute inset-0 border-[8px] border-[#1e1f22] rounded-xl z-20 pointer-events-none" />
             <div className="absolute top-2 left-2 z-20"><span className="screw" /></div>
             <div className="absolute top-2 right-2 z-20"><span className="screw" /></div>
@@ -355,7 +362,7 @@ export default function LandingPage() {
 
   // ─── Landing Page / Oscilloscope Dashboard ──────────────────────────────────
   return (
-    <div className="flex-1 flex flex-col p-6 bg-[#121212] relative select-none items-center">
+    <div className="flex-1 flex flex-col p-6 bg-[#121212] relative select-none items-center overflow-y-auto min-h-0">
       
       {/* Main Console Faceplate */}
       <div className="osc-chassis w-full max-w-6xl flex flex-col p-8 relative">
