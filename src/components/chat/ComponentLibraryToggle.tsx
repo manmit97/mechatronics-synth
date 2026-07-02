@@ -24,7 +24,7 @@ export function ComponentLibraryToggle() {
       title="Open Parts Catalog"
     >
       <Package className="w-3 h-3" />
-      PARTS
+      PARTS CATALOGUE
       {!isOpen && (
         <span className="relative flex h-1.5 w-1.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />

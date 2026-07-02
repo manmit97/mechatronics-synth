@@ -553,7 +553,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
       {/* Recessed cabinet chassis screws */}
       <div className="absolute top-2 left-2"><span className="screw" /></div>
       <div className="absolute top-2 right-2"><span className="screw" /></div>
@@ -591,7 +591,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
       {/* Landing Page Header with Parts Toggle */}
       {isLandingPage && (
-        <div className="flex items-center justify-end px-6 py-1.5 border-b border-[#374151]/50 gap-2">
+        <div className="flex items-center justify-start px-6 py-1.5 border-b border-[#374151]/50 gap-2">
           <button
             onClick={() => {
               playClickSound(true);
@@ -621,7 +621,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
       )}
 
       {/* Oscilloscope Screen Message Feed */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 osc-screen">
+      <div className="flex-1 !overflow-y-auto px-6 py-4 space-y-4 osc-screen">
         <div className="osc-grid" />
         <div className="relative z-10">
           {displayMessages.map((msg) => (
@@ -645,12 +645,18 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
                   {msg.isDesignReady && (
                     <div className="mt-3 pt-2">
-                      <Link href="/configurator" onClick={() => playClickSound(true)}
+                      <button 
+                        onClick={() => {
+                          playClickSound(true);
+                          const store = useProjectStore.getState();
+                          if (!store.pillar) store.setPillar('physical');
+                          store.setShowWorkspace(true);
+                        }}
                         className="osc-button px-4 py-2 flex items-center gap-2 osc-button-primary w-fit text-[#facc15]"
                         style={{ borderTopColor: '#facc15' }}>
                         ENGAGE CONFIGURATOR
                         <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </button>
                     </div>
                   )}
 

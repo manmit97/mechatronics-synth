@@ -245,21 +245,28 @@ export default function LandingPage() {
 
   const hasDesign = catalog.length > 0 && currentPillar;
 
-  const [selectedPillar, setSelectedPillar] = useState<ServicePillar | null>(currentPillar || null);
-  const [showWorkspace, setShowWorkspace] = useState(!!hasDesign);
+  const showWorkspace = useProjectStore((s) => s.showWorkspace);
+  const setShowWorkspace = useProjectStore((s) => s.setShowWorkspace);
+  const selectedPillar = currentPillar;
 
   // Apply pillar theme to <html> for global CSS variables if needed
   useEffect(() => {
-    if (selectedPillar) {
-      document.documentElement.setAttribute('data-pillar', selectedPillar);
+    if (currentPillar) {
+      document.documentElement.setAttribute('data-pillar', currentPillar);
     } else {
       document.documentElement.removeAttribute('data-pillar');
     }
-  }, [selectedPillar]);
+  }, [currentPillar]);
+
+  // Auto-open workspace if we have a design on initial load
+  useEffect(() => {
+    if (hasDesign && !showWorkspace) {
+      setShowWorkspace(true);
+    }
+  }, [hasDesign, showWorkspace, setShowWorkspace]);
 
   const handlePillarSelect = (pillarId: ServicePillar) => {
     playConnectSound();
-    setSelectedPillar(pillarId);
     setPillar(pillarId);
 
     // Transition to workspace after a brief delay
@@ -271,7 +278,7 @@ export default function LandingPage() {
   const handleBackToSelection = () => {
     playClickSound(false);
     setShowWorkspace(false);
-    setSelectedPillar(null);
+    // Note: We don't clear the pillar so they can easily re-enter
   };
 
   // ─── Workspace View (Configurator / Sim) ───────────────────────────────────

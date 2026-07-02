@@ -11,6 +11,7 @@ interface ProjectState {
   requirements: RequirementsSpec | null;
   agentPhase: AgentPhase;
   generationProgress: GenerationProgress;
+  showWorkspace: boolean;
 
   setPillar: (pillar: ServicePillar) => void;
   setIdea: (description: string) => void;
@@ -18,6 +19,7 @@ interface ProjectState {
   setAgentPhase: (phase: AgentPhase) => void;
   updateProgress: (completed: number, currentStep: string) => void;
   setTotalProgress: (total: number) => void;
+  setShowWorkspace: (show: boolean) => void;
   reset: () => void;
 }
 
@@ -33,6 +35,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   requirements: null,
   agentPhase: 'idle',
   generationProgress: initialProgress,
+  showWorkspace: false,
 
   setPillar: (pillar) => set({ pillar }),
 
@@ -66,6 +69,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set((state) => ({
       generationProgress: { ...state.generationProgress, total },
     })),
+
+  setShowWorkspace: (show) => set({ showWorkspace: show }),
 
   reset: () =>
     set({

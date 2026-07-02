@@ -209,7 +209,12 @@ function SceneContent() {
         alignment="top-right"
         margin={[80, 80]}
       >
-        <GizmoViewcube />
+        <GizmoViewcube 
+          color="#1a1b1e"
+          textColor="#f3f4f6"
+          strokeColor="#374151"
+          hoverColor="#60a5fa"
+        />
       </GizmoHelper>
 
       <ZoomControls />
