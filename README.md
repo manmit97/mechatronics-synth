@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🎛️ Mechatronics Synth Lab</h1>
+  <h1>🎛️ MechaForge</h1>
   <p><strong>UXR-Series Oscilloscope Engine & Hardware Automation Synthesizer</strong></p>
   
   [![Next.js](https://img.shields.io/badge/Next.js-16.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
@@ -17,9 +17,9 @@
 
 ---
 
-## ⚡ What is Mechatronics Synth Lab?
+## ⚡ What is MechaForge?
 
-**Mechatronics Synth Lab** is a web-based synthesis and configuration engine designed with a meticulously crafted, hardware-accurate **Oscilloscope UI**. 
+**MechaForge** is a web-based synthesis and configuration engine designed with a meticulously crafted, hardware-accurate **Oscilloscope UI**. 
 
 It bridges the gap between hardware engineering and modern web technologies by allowing users to conceptualize and design complex mechatronic systems (such as autonomous rovers, robotic arms, and hexapods) directly in the browser. Rather than relying on static schematics, the Lab generates realistic Bill of Materials (BOM), procedural 3D representations, and detailed component specifications in real-time.
 

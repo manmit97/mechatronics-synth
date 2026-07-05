@@ -13,7 +13,7 @@ export interface MockResponse {
   isComplete?: boolean;
 }
 
-const GREETING = `Welcome to **MechatronicsSynth** 🤖
+const GREETING = `Welcome to **MechaForge** 🤖
 
 I'm your AI design companion. I'll help you go from idea to a fully engineered mechatronic system — complete with 3D models, bill of materials, assembly instructions, and simulation.
 

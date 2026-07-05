@@ -18,8 +18,11 @@ import { parseGenerateDesignResult, parseRefineDesignResult, type GenerateDesign
 import { TokenGauge } from './TokenGauge';
 import { ComponentLibraryToggle } from './ComponentLibraryToggle';
 import { ComponentLibrary } from './ComponentLibrary';
+import { ConceptLibraryToggle } from './ConceptLibraryToggle';
+import { ConceptLibrary } from './ConceptLibrary';
 import Link from 'next/link';
 import { playClickSound, playKeyPressSound } from '@/utils/audio';
+import { useConceptLibraryStore } from '@/stores/concept-library-store';
 
 interface LocalMessage {
   id: string;
@@ -77,7 +80,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { quickActions, currentContext } = useChatStore();
+  const { quickActions, currentContext, pendingPrompt, setPendingPrompt } = useChatStore();
   const { setIdea, setRequirements, setAgentPhase, agentPhase } = useProjectStore();
   const { catalog, addMultipleToCatalog, initializeConfig, addPart, clearCatalog } = useConfiguratorStore();
   const { recalculate } = useBOMStore();
@@ -487,6 +490,24 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
     }
   };
 
+  useEffect(() => {
+    if (pendingPrompt) {
+      const prompt = pendingPrompt;
+      setPendingPrompt(null);
+      if (isMockMode) {
+        setMockInput(prompt);
+        setTimeout(() => {
+          // A hack to force send since handleSend uses state
+          const submitEvent = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: false });
+          document.getElementById('chat-input')?.dispatchEvent(submitEvent);
+        }, 100);
+      } else {
+        setAIInput('');
+        sendMessage({ text: prompt });
+      }
+    }
+  }, [pendingPrompt, isMockMode, setPendingPrompt, sendMessage]);
+
   const handleQuickAction = (prompt: string) => {
     playClickSound(true);
     if (isMockMode) {
@@ -508,6 +529,11 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
     useComponentLibraryStore.getState().closeLibrary();
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [isMockMode]);
+
+  const handleImportConcept = useCallback((prompt: string) => {
+    setPendingPrompt(prompt);
+    useConceptLibraryStore.getState().closeLibrary();
+  }, [setPendingPrompt]);
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -581,6 +607,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
               {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
               {isMockMode ? 'OFFLINE' : 'ONLINE'}
             </button>
+            <ConceptLibraryToggle />
             <ComponentLibraryToggle />
             <button onClick={() => { playClickSound(false); useChatStore.getState().closeDrawer(); }} className="text-[#9ca3af] hover:text-[#f3f4f6] transition-colors">
               <X className="w-4 h-4" />
@@ -605,11 +632,13 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
             {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
             {isMockMode ? 'OFFLINE' : 'ONLINE'}
           </button>
+          <ConceptLibraryToggle />
           <ComponentLibraryToggle />
         </div>
       )}
 
-      {/* Component Library Overlay */}
+      {/* Overlays */}
+      <ConceptLibrary onImportConcept={handleImportConcept} />
       <ComponentLibrary onAddToChat={handleAddToChat} />
 
       {/* AI Error Banner */}
@@ -701,6 +730,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
       <div className="px-6 py-3 border-t border-[#374151] bg-[#1e1f22] flex flex-col gap-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
         <div className="flex items-center gap-3">
           <textarea
+            id="chat-input"
             ref={inputRef}
             value={currentInput}
             onChange={handleInputChange}

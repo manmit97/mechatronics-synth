@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MechatronicsSynth — AI-Powered Mechatronics Design Platform',
+  title: 'MechaForge — AI-Powered Mechatronics Design Platform',
   description: 'Design, simulate, and manufacture custom mechatronic systems with AI. Describe your idea and get a complete engineering design with 3D models, BOM, and assembly instructions.',
   keywords: ['mechatronics', 'robotics', '3D configurator', 'AI design', 'engineering'],
 };

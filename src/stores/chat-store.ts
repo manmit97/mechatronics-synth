@@ -23,6 +23,7 @@ interface ChatStoreState {
   isOpen: boolean;
   currentContext: PageContext;
   quickActions: QuickAction[];
+  pendingPrompt: string | null;
 
   toggleDrawer: () => void;
   openDrawer: () => void;
@@ -30,12 +31,14 @@ interface ChatStoreState {
   setContext: (page: PageContext) => void;
   setCurrentContext: (page: PageContext) => void;
   setQuickActions: (actions: QuickAction[]) => void;
+  setPendingPrompt: (prompt: string | null) => void;
 }
 
 export const useChatStore = create<ChatStoreState>((set) => ({
   isOpen: false,
   currentContext: 'landing',
   quickActions: QUICK_ACTIONS.filter((a) => a.contexts.includes('landing')),
+  pendingPrompt: null,
 
   toggleDrawer: () => set((state) => ({ isOpen: !state.isOpen })),
   openDrawer: () => set({ isOpen: true }),
@@ -49,4 +52,5 @@ export const useChatStore = create<ChatStoreState>((set) => ({
 
   setCurrentContext: (page) => set({ currentContext: page }),
   setQuickActions: (actions) => set({ quickActions: actions }),
+  setPendingPrompt: (prompt) => set({ pendingPrompt: prompt }),
 }));

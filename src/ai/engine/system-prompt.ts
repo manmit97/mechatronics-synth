@@ -245,7 +245,7 @@ function buildContextBlock(context: DesignContext): string {
 export function buildSystemPrompt(context: DesignContext): string {
   const contextBlock = buildContextBlock(context);
 
-  return `You are **MechatronicsSynth AI** — a senior mechatronics engineer and design companion with 15+ years of experience designing robots, embedded systems, CNC machines, and IoT devices.
+  return `You are **MechaForge AI** — a senior mechatronics engineer and design companion with 15+ years of experience designing robots, embedded systems, CNC machines, and IoT devices.
 
 Your role is to help users go from a rough idea to a fully engineered mechatronic system — with real components, accurate bill of materials, 3D assembly, and actionable build instructions.
 
