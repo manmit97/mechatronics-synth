@@ -2,12 +2,11 @@
 // Server-side endpoint for AI-powered chat with streaming, tool calls,
 // and web search. Falls back to mock responses when no API key is set.
 
-import { streamText, stepCountIs, convertToModelMessages } from 'ai';
-import { isAIEnabled, getModel } from '@/ai/engine/llm-client';
-import { buildSystemPrompt } from '@/ai/engine/system-prompt';
-import { allTools } from '@/ai/engine/tools';
+import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+import { isAIEnabled } from '@/ai/engine/llm-client';
 import { computeTokenUsage, emptyTokenUsage } from '@/ai/engine/token-tracker';
 import { getMockGreeting, getMockResponse } from '@/ai/mock/mock-agent-responses';
+import { appGraph } from '@/ai/engine/graph-workflow';
 
 export const maxDuration = 60; // Allow up to 60s for complex generations
 
@@ -24,37 +23,32 @@ export async function POST(request: Request) {
       return handleMockFallback(messages, context);
     }
 
-    // ─── Build System Prompt with Dynamic Context ─────────────────────────
-    const systemPrompt = buildSystemPrompt({
-      currentCatalog: context.catalog || [],
-      currentRequirements: context.requirements || null,
-      currentPage: context.currentPage || 'landing',
-      selectedPartId: context.selectedPartId || null,
-      pillar: context.pillar || null,
-    });
+    // ─── Stream Response via LangGraph Orchestration ──────────────────────
+    const stream = createUIMessageStream({
+      execute: async ({ writer }) => {
+        try {
+          const initialState = {
+            messages: messages,
+            catalog: context.catalog || [],
+            requirements: context.requirements || null,
+            currentPage: context.currentPage || 'landing',
+            selectedPartId: context.selectedPartId || null,
+            pillar: context.pillar || null,
+            feedback: null,
+          };
 
-    // ─── Stream Response with Tools ───────────────────────────────────────
-    const result = streamText({
-      model: getModel(),
-      system: systemPrompt,
-      messages: await convertToModelMessages(messages),
-      tools: allTools,
-      stopWhen: stepCountIs(5), // Allow multi-step tool usage
-      temperature: 0.7,
-      onFinish: async ({ usage }) => {
-        // Token tracking — compute and log
-        if (usage) {
-          const tokenUsage = computeTokenUsage(
-            usage.inputTokens || 0,
-            usage.outputTokens || 0,
-            context.previousTokenUsage || undefined
-          );
-          console.log(`[AI Chat] Tokens: ${tokenUsage.totalTokens} | Cost: $${tokenUsage.estimatedCostUsd.toFixed(6)}`);
+          // Invoke the LangGraph workflow, passing the writer for real-time streaming
+          await appGraph.invoke(initialState, {
+            configurable: { writer }
+          });
+          
+        } catch (err) {
+          console.error('[LangGraph Execution Error]', err);
+          // writer doesn't have an error annotation in the same way, but it throws or we ignore
         }
-      },
+      }
     });
-
-    return result.toUIMessageStreamResponse();
+    return createUIMessageStreamResponse({ stream });
   } catch (error) {
     console.error('[Chat API Error]', error);
     return Response.json(
