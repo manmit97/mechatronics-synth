@@ -100,427 +100,110 @@ body {
   background: #6b7280;
 }
 
-/* ─── Test Equipment Chassis ─────────────────────────────────────────────── */
-
-/* Main rugged instrument chassis */
-.osc-chassis {
-  background: #1e1f22;
-  border: 2px solid #374151;
-  border-radius: var(--radius-xl);
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-/* Screws in metal faceplates */
-.screw {
-  width: 10px;
-  height: 10px;
-  background: #374151;
-  border-radius: 50%;
-  box-shadow: inset 1px 1px 1px rgba(255,255,255,0.1), inset -1px -1px 1px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.5);
-  position: relative;
-  display: inline-block;
-}
-.screw::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 20%;
-  right: 20%;
-  height: 1px;
-  background: #111;
-  transform: translateY(-50%) rotate(45deg);
-}
-.screw::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 20%;
-  right: 20%;
-  height: 1px;
-  background: #111;
-  transform: translateY(-50%) rotate(-45deg);
-}
-
-/* Matte Gray Faceplate finish */
-.osc-faceplate {
-  background-color: var(--color-surface-secondary);
-  border: 1px solid var(--color-border-subtle);
-  border-bottom: 2px solid #1a1b1e;
-  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.05);
-}
-
-/* Hardware Handles / Bumpers */
-.osc-bumper {
-  background: linear-gradient(90deg, #111, #222, #111);
-  border: 1px solid #000;
-  box-shadow: inset 1px 0 0 rgba(255,255,255,0.1), inset -1px 0 2px rgba(0,0,0,0.8);
-}
-
-/* Silkscreen text styling */
-.silkscreen-label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-}
-
-.silkscreen-header {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-primary);
-}
-
-/* ─── BNC Connectors & LEDs ──────────────────────────────────────────────── */
-
-/* BNC Port */
-.bnc-connector {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #e5e7eb, #9ca3af 40%, #4b5563 80%, #1f2937);
-  border: 2px solid #111;
-  box-shadow: 
-    0 4px 6px rgba(0,0,0,0.5),
-    inset 0 -2px 5px rgba(0,0,0,0.6),
-    inset 0 2px 4px rgba(255,255,255,0.5);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bnc-inner {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #111;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bnc-pin {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #fef08a, #ca8a04);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-
-/* Color coded BNC Ring */
-.bnc-ring {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  pointer-events: none;
-}
-
-/* Flat panel LEDs */
-.osc-led {
-  width: 12px;
-  height: 6px;
-  border-radius: 1px;
-  background: #1a1b1e;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-  transition: all 0.1s;
-  display: inline-block;
-}
-
-.osc-led.active {
-  background: var(--led-color, #4ade80);
-  box-shadow: 
-    0 0 8px 1px var(--led-color, #4ade80), 
-    inset 0 1px 2px rgba(255,255,255,0.5);
-}
-
-/* ─── Tactile Hardware Buttons ───────────────────────────────────────────── */
-
-.osc-button {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 700;
-  background: #374151;
-  border: 1px solid #1a1b1e;
-  border-top: 1px solid #4b5563;
-  color: #d1d5db;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  transition: all 0.05s ease;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.osc-button:active:not(:disabled),
-.osc-button.active {
-  background: #1f2937;
-  border-top: 1px solid #111;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-  color: #fff;
-  transform: translateY(1px);
-}
-
-.osc-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.osc-button-primary {
-  background: #4b5563;
-}
-.osc-button-primary.active, .osc-button-primary:active:not(:disabled) {
-  background: #374151;
-}
-
-/* ─── Rotary Control Knobs ───────────────────────────────────────────────── */
-
-.osc-knob-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.osc-knob {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #4b5563, #374151 60%, #1f2937);
-  border: 1px solid #111;
-  box-shadow: 
-    0 4px 6px rgba(0,0,0,0.6),
-    inset 0 1px 2px rgba(255,255,255,0.1);
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-
-/* Ridged edges for grip */
-.osc-knob::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(
-    #2c2e33 0deg,
-    #2c2e33 5deg,
-    #1e1f22 5deg,
-    #1e1f22 10deg
-  );
-  opacity: 0.5;
-  z-index: 1;
-}
-
-/* Solid center cap */
-.osc-knob::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: #374151;
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3);
-  z-index: 2;
-}
-
-.osc-knob-indicator {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  width: 3px;
-  height: 12px;
-  background: #f3f4f6; /* White indicator */
-  transform: translateX(-50%);
-  border-radius: 2px;
-  z-index: 3;
-}
-
-/* Smaller knob variant */
-.osc-knob-sm {
-  width: 32px;
-  height: 32px;
-}
-.osc-knob-sm::after { inset: 4px; }
-.osc-knob-sm .osc-knob-indicator { height: 8px; top: 6px; }
-
-/* ─── TFT Oscilloscope Screen Display ────────────────────────────────────── */
-
-.osc-screen {
-  background-color: #000;
-  color: #fff;
-  font-family: var(--font-mono);
-  border: 2px solid #111;
-  border-radius: var(--radius-sm);
-  box-shadow: 
-    inset 0 0 10px rgba(0, 0, 0, 0.8),
-    0 2px 4px rgba(0,0,0,0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.osc-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-  background-size: calc(100% / 10) calc(100% / 8); /* 10x8 divisions is standard */
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Center crosshairs */
-.osc-grid::before {
-  content: '';
-  position: absolute;
-  top: 50%; left: 0; right: 0; height: 1px;
-  background: rgba(255, 255, 255, 0.3);
-}
-.osc-grid::after {
-  content: '';
-  position: absolute;
-  left: 50%; top: 0; bottom: 0; width: 1px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.osc-screen-content {
-  z-index: 2;
-  position: relative;
-}
-
-/* ─── Utility Panels ────────────────────────────────────────────────────── */
+/* ─── Premium Glassmorphic UI Utilities ──────────────────────────────────── */
 
 .glass-panel {
-  background: rgba(44, 46, 51, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  background: rgba(18, 18, 20, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
-.tech-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
+.glass-panel-light {
+  background: rgba(28, 30, 34, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* ─── Pillar/Channel Theming ─────────────────────────────────────────────── */
-
-[data-channel="1"] {
-  --channel-color: #facc15;         /* Yellow */
-}
-[data-channel="2"] {
-  --channel-color: #4ade80;         /* Green */
-}
-[data-channel="3"] {
-  --channel-color: #60a5fa;         /* Blue */
-}
-[data-channel="4"] {
-  --channel-color: #f87171;         /* Red */
+.glass-panel-active {
+  background: rgba(35, 38, 43, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-/* ─── Animations ─────────────────────────────────────────────────────────── */
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.bg-mesh-gradient {
+  background-color: #050505;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+.bg-mesh-workspace {
+  background-color: #09090b;
+  background-image: 
+    radial-gradient(at 100% 100%, hsla(210, 20%, 15%, 0.5) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(250, 20%, 12%, 0.4) 0, transparent 50%);
 }
 
-@keyframes wave-scroll {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+.text-gradient {
+  background: linear-gradient(135deg, #f3f4f6 0%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-@keyframes scanline {
-  0% { left: -5%; opacity: 0; }
-  5% { opacity: 0.8; }
-  95% { opacity: 0.8; }
-  100% { left: 105%; opacity: 0; }
+.text-gradient-accent {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-@keyframes crt-flicker {
-  0%, 100% { opacity: 0.95; }
-  50% { opacity: 0.85; }
-  25%, 75% { opacity: 0.9; }
+/* Premium Button Styling */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+  transition: all 0.2s ease-in-out;
 }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+.btn-primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+  transform: translateY(-1px);
 }
 
-.animate-pulse-dot {
-  animation: pulse-dot 1.5s ease-in-out infinite;
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease-in-out;
 }
 
-.animate-wave-scroll {
-  animation: wave-scroll 6s linear infinite;
-  will-change: transform;
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
-
-.animate-scanline {
-  animation: scanline 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-crt {
-  animation: crt-flicker 0.15s infinite;
-}
-
-/* Staggered children animations */
-.stagger-children > * {
-  opacity: 0;
-  animation: fade-in-up 0.2s ease-out forwards;
-}
-
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 0.03s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.09s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.12s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.15s; }
 
 /* ─── Chat bubble overrides ──────────────────────────────────────────────── */
 
 .chat-bubble-user {
-  background: #1f2937;
+  background: rgba(255, 255, 255, 0.08);
   color: #f3f4f6;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  border: 1px solid #374151;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
 }
 
 .chat-bubble-assistant {
-  background: #000;
-  border: 1px solid #374151;
-  border-radius: var(--radius-sm);
-  color: #4ade80; /* Hacker green */
-  font-family: var(--font-mono);
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  color: #e5e7eb;
+  font-family: var(--font-sans);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
 }
 
 .section-divider {
   height: 1px;
-  background: #374151;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 /* ─── Component Library Styles ─────────────────────────────────────────────── */
