@@ -3,6 +3,8 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { ChatDrawer, ChatToggle } from '@/components/chat/ChatPanel';
+import { ConceptLibrary } from '@/components/chat/ConceptLibrary';
+import { ComponentLibrary } from '@/components/chat/ComponentLibrary';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useChatStore } from '@/stores/chat-store';
@@ -39,6 +41,10 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           <ChatToggle />
         </>
       )}
+      
+      {/* Global Modals/Overlays */}
+      <ConceptLibrary />
+      <ComponentLibrary />
     </div>
   );
 }

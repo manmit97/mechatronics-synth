@@ -12,6 +12,7 @@ interface ProjectState {
   agentPhase: AgentPhase;
   generationProgress: GenerationProgress;
   showWorkspace: boolean;
+  show3DViewport: boolean;
 
   setPillar: (pillar: ServicePillar) => void;
   setIdea: (description: string) => void;
@@ -20,6 +21,7 @@ interface ProjectState {
   updateProgress: (completed: number, currentStep: string) => void;
   setTotalProgress: (total: number) => void;
   setShowWorkspace: (show: boolean) => void;
+  setShow3DViewport: (show: boolean) => void;
   reset: () => void;
 }
 
@@ -36,6 +38,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   agentPhase: 'idle',
   generationProgress: initialProgress,
   showWorkspace: false,
+  show3DViewport: true,
 
   setPillar: (pillar) => set({ pillar }),
 
@@ -71,6 +74,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     })),
 
   setShowWorkspace: (show) => set({ showWorkspace: show }),
+  setShow3DViewport: (show) => set({ show3DViewport: show }),
 
   reset: () =>
     set({

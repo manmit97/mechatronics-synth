@@ -16,7 +16,7 @@ export function ComponentLibraryToggle() {
         playClickSound(true);
         toggleLibrary();
       }}
-      className={`flex items-center gap-1.5 px-2 py-1 rounded text-[8px] font-mono font-bold tracking-wider transition-all ${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold tracking-wide transition-all ${
         isOpen
           ? 'bg-[#facc15]/20 text-[#facc15] border border-[#facc15]/40'
           : 'text-[#9ca3af] hover:text-[#f3f4f6] border border-[#374151] hover:border-[#4b5563]'

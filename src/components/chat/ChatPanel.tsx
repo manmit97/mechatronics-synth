@@ -16,10 +16,6 @@ import { getMockGreeting, getMockResponse } from '@/ai/mock/mock-agent-responses
 import { processRefinementRequest, formatCrossDomainImpacts } from '@/ai/mock/mock-refinement-engine';
 import { parseGenerateDesignResult, parseRefineDesignResult, type GenerateDesignResult, type RefineDesignResult } from '@/ai/engine/response-parser';
 import { TokenGauge } from './TokenGauge';
-import { ComponentLibraryToggle } from './ComponentLibraryToggle';
-import { ComponentLibrary } from './ComponentLibrary';
-import { ConceptLibraryToggle } from './ConceptLibraryToggle';
-import { ConceptLibrary } from './ConceptLibrary';
 import Link from 'next/link';
 import { playClickSound, playKeyPressSound } from '@/utils/audio';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
@@ -80,45 +76,35 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { quickActions, currentContext, pendingPrompt, setPendingPrompt } = useChatStore();
+  const { quickActions, currentContext, pendingPrompt, setPendingPrompt, knobRotations } = useChatStore();
   const { setIdea, setRequirements, setAgentPhase, agentPhase } = useProjectStore();
   const { catalog, addMultipleToCatalog, initializeConfig, addPart, clearCatalog } = useConfiguratorStore();
   const { recalculate } = useBOMStore();
   const { createSnapshot } = useDesignHistoryStore();
   const { incrementSearches, setAIEnabled } = useTokenStore();
 
-  // Decorative rotating knobs
-  const [knobRotations, setKnobRotations] = useState([45, -30, 90]);
-  const handleKnobClick = useCallback((index: number) => {
-    setKnobRotations(prev => {
-      const next = [...prev];
-      next[index] = (next[index] + 45) % 360;
-      return next;
-    });
-    playClickSound(false);
-  }, []);
 
   // ─── Map Rotations to Reading Styles ─────────────────────────────────────────
 
   const getFontSizeClass = () => {
     const rot = knobRotations[0];
-    if (rot < 90) return 'text-[10px] [&_h2]:text-[11px] [&_h3]:text-[10px]';
-    if (rot < 180) return 'text-[12px] [&_h2]:text-[13px] [&_h3]:text-[12px]';
-    if (rot < 270) return 'text-[14px] [&_h2]:text-[15px] [&_h3]:text-[14px]';
-    return 'text-[16px] [&_h2]:text-[17px] [&_h3]:text-[16px]';
+    if (rot <= 25) return 'text-sm [&_h2]:text-base [&_h3]:text-sm font-sans';
+    if (rot <= 50) return 'text-base [&_h2]:text-lg [&_h3]:text-base font-sans';
+    if (rot <= 75) return 'text-lg [&_h2]:text-xl [&_h3]:text-lg font-sans';
+    return 'text-xl [&_h2]:text-2xl [&_h3]:text-xl font-sans';
   };
 
   const getLineHeightClass = () => {
     const rot = knobRotations[1];
-    if (rot < 120) return '[&_p]:leading-tight';
-    if (rot < 240) return '[&_p]:leading-relaxed';
+    if (rot <= 33) return '[&_p]:leading-tight';
+    if (rot <= 66) return '[&_p]:leading-relaxed';
     return '[&_p]:leading-loose';
   };
 
   const getBrightnessClass = () => {
     const rot = knobRotations[2];
-    if (rot < 120) return 'opacity-70 drop-shadow-none';
-    if (rot < 240) return 'opacity-90 drop-shadow-[0_0_1px_rgba(74,222,128,0.2)]';
+    if (rot <= 33) return 'opacity-70 drop-shadow-none';
+    if (rot <= 66) return 'opacity-90 drop-shadow-[0_0_1px_rgba(74,222,128,0.2)]';
     return 'opacity-100 drop-shadow-[0_0_4px_rgba(74,222,128,0.8)]';
   };
 
@@ -589,7 +575,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
         <div className="flex items-center justify-between px-6 py-2 border-b border-[#374151] bg-[#1a1b1e]">
           <div className="flex items-center gap-2">
             <span className={`osc-led active animate-pulse-dot`} style={{ '--led-color': isMockMode ? '#ef4444' : '#4ade80' } as React.CSSProperties} />
-            <span className={`text-[10px] font-mono font-bold tracking-wider ${isMockMode ? 'text-[#ef4444]' : 'text-[#4ade80]'}`}>
+            <span className={`text-sm font-semibold tracking-wide ${isMockMode ? 'text-[#ef4444]' : 'text-[#4ade80]'}`}>
               TERMINAL {isMockMode ? '// OFFLINE' : '// LIVE AI'} {'//'} {contextLabels[currentContext]}
             </span>
           </div>
@@ -600,15 +586,13 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
                 setIsMockMode(!isMockMode);
                 setAIEnabled(isMockMode);
               }}
-              className={`osc-button px-2 py-1 flex items-center gap-1.5 text-[9px] ${
+              className={`osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold ${
                 isMockMode ? 'text-[#ef4444] border-t-[#ef4444]' : 'text-[#4ade80] border-t-[#4ade80]'
               }`}
             >
               {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
               {isMockMode ? 'OFFLINE' : 'ONLINE'}
             </button>
-            <ConceptLibraryToggle />
-            <ComponentLibraryToggle />
             <button onClick={() => { playClickSound(false); useChatStore.getState().closeDrawer(); }} className="text-[#9ca3af] hover:text-[#f3f4f6] transition-colors">
               <X className="w-4 h-4" />
             </button>
@@ -625,25 +609,21 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
               setIsMockMode(!isMockMode);
               setAIEnabled(isMockMode);
             }}
-            className={`osc-button px-2 py-1 flex items-center gap-1.5 text-[9px] ${
+            className={`osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold ${
               isMockMode ? 'text-[#ef4444] border-t-[#ef4444]' : 'text-[#4ade80] border-t-[#4ade80]'
             }`}
           >
             {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
             {isMockMode ? 'OFFLINE' : 'ONLINE'}
           </button>
-          <ConceptLibraryToggle />
-          <ComponentLibraryToggle />
         </div>
       )}
 
-      {/* Overlays */}
-      <ConceptLibrary onImportConcept={handleImportConcept} />
-      <ComponentLibrary onAddToChat={handleAddToChat} />
+      {/* Libraries are now globally managed in ClientLayout */}
 
       {/* AI Error Banner */}
       {aiError && !isMockMode && (
-        <div className="px-4 py-2 bg-[#ef4444]/10 border-b border-[#ef4444]/30 text-[9px] font-mono text-[#ef4444] flex items-center gap-2">
+        <div className="px-4 py-2 bg-[#ef4444]/10 border-b border-[#ef4444]/30 text-sm font-medium text-[#ef4444] flex items-center gap-2">
           <AlertTriangle className="w-3 h-3" />
           AI Error: {aiError.message}. Falling back to offline mode.
         </div>
@@ -654,17 +634,17 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
         <div className="osc-grid" />
         <div className="relative z-10">
           {displayMessages.map((msg) => (
-            <div key={msg.id} className="animate-fade-in text-[11px] font-mono mb-4">
+            <div key={msg.id} className="animate-fade-in text-base font-sans mb-4">
               {msg.role === 'user' ? (
                 <div className="text-[#9ca3af] mb-1">
-                  <span>&gt; USER REQUEST INPUT:</span>
-                  <p className="text-[#f3f4f6] mt-1 border-l-2 border-[#60a5fa] pl-2 py-0.5 leading-relaxed bg-[#60a5fa]/10">
+                  <span className="text-xs font-semibold tracking-wide">&gt; USER REQUEST INPUT:</span>
+                  <p className="text-[#f3f4f6] mt-1 border-l-2 border-[#60a5fa] pl-3 py-1.5 leading-relaxed bg-[#60a5fa]/10 rounded-r">
                     {msg.content}
                   </p>
                 </div>
               ) : (
                 <div className="text-[#4ade80] space-y-2 leading-relaxed">
-                  <div className="text-[9px] text-[#4ade80]/60 tracking-widest uppercase border-b border-[#4ade80]/20 pb-1">
+                  <div className="text-xs text-[#4ade80]/60 font-semibold tracking-widest uppercase border-b border-[#4ade80]/20 pb-1">
                     {isMockMode ? 'SYSTEM OUTPUT // OFFLINE MODE' : 'SYSTEM OUTPUT // AI TELEMETRY'}
                   </div>
                   <div
@@ -691,7 +671,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
                   {msg.impactCards && msg.impactCards.length > 0 && (
                     <div className="mt-3 space-y-2 border-t border-[#4ade80]/20 pt-2">
-                      <div className="text-[9px] text-[#ef4444] font-bold uppercase tracking-widest">
+                      <div className="text-xs text-[#ef4444] font-bold uppercase tracking-widest">
                         CRITICAL DIAGNOSTIC SUMMARY:
                       </div>
                       {msg.impactCards.map((card, i) => (
@@ -704,7 +684,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
             </div>
           ))}
           {isTyping && (
-            <div className="flex items-center gap-2 text-[10px] text-[#4ade80]/60 font-mono animate-pulse">
+            <div className="flex items-center gap-2 text-xs text-[#4ade80]/60 font-sans font-semibold animate-pulse">
               <span className="osc-led active animate-pulse-dot" style={{ '--led-color': '#4ade80' } as React.CSSProperties} />
               <span>{isMockMode ? 'ACQUIRING SIGNAL PARAMETERS...' : getStatusText()}</span>
             </div>
@@ -718,7 +698,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
         <div className="px-6 py-2 flex gap-2 overflow-x-auto border-t border-[#374151] bg-[#1a1b1e] items-center relative min-h-[48px]">
           {quickActions.map((action) => (
             <button key={action.id} onClick={() => handleQuickAction(action.prompt)}
-              className="osc-button px-3 py-1.5 shrink-0 flex items-center gap-1 text-[9px]">
+              className="osc-button px-4 py-2 shrink-0 flex items-center gap-1.5 text-xs font-semibold">
               <Sparkles className="w-2.5 h-2.5 text-[#facc15]" />
               {action.label.toUpperCase()}
             </button>
@@ -741,7 +721,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
               return `DESCRIBE ${PILLAR_CONFIGS[pillar].name.toUpperCase()} PARAMETERS...`;
             })()}
             rows={1}
-            className="flex-1 resize-none bg-[#111] border border-[#374151] rounded px-3 py-2 text-xs font-mono text-[#f3f4f6] placeholder:text-[#6b7280] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
+            className="flex-1 resize-none bg-[#111] border border-[#374151] rounded px-3 py-2 text-sm font-sans text-[#f3f4f6] placeholder:text-[#6b7280] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
             style={{ minHeight: '36px', maxHeight: '100px' }}
           />
           <button
@@ -756,18 +736,8 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
         {/* Token Gauge + Decorative Knobs */}
         <div className="flex flex-wrap items-center justify-between border-t border-[#374151] pt-2 select-none gap-y-2">
-          <div className="flex items-center gap-3 sm:gap-5">
-            {['TEXT SIZE', 'LINE SPACING', 'BRIGHTNESS'].map((label, idx) => (
-              <div key={label} className="flex items-center gap-1.5 cursor-pointer group" onClick={() => handleKnobClick(idx)}>
-                <div className="osc-knob osc-knob-sm transition-transform duration-200" style={{ transform: `rotate(${knobRotations[idx]}deg)` }}>
-                  <div className="osc-knob-indicator" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[7px] sm:text-[8px] font-mono font-bold text-[#9ca3af] tracking-widest leading-none whitespace-nowrap">{label}</span>
-                  <span className="text-[6px] sm:text-[7px] font-mono text-[#60a5fa] mt-0.5 leading-none">{knobRotations[idx]}°</span>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center">
+            {/* The adjusters have been moved to the System Settings */}
           </div>
           <TokenGauge isTyping={isTyping} />
         </div>
@@ -785,7 +755,7 @@ function ImpactCardComponent({ domain, severity, description, recommendation }: 
   const color = severityColors[severity] || '#facc15';
 
   return (
-    <div className="rounded border p-2.5 text-[10px] font-mono space-y-1 bg-[#1a1b1e]/80" style={{ borderColor: color }}>
+    <div className="rounded border p-3 text-xs font-sans space-y-1.5 bg-[#1a1b1e]/80" style={{ borderColor: color }}>
       <div className="flex items-center gap-1.5">
         <Icon className="w-3.5 h-3.5" style={{ color }} />
         <span className="font-bold uppercase tracking-wider" style={{ color }}>

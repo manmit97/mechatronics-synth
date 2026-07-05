@@ -11,9 +11,7 @@ import type { PartCategory } from '@/types/parts';
 // RPG-inventory-style browsable panel with categorized components, real prices,
 // stock LEDs, and "Add to Chat" interaction.
 
-interface ComponentLibraryProps {
-  onAddToChat: (componentName: string) => void;
-}
+// Props removed, using global store
 
 const CATEGORIES: { id: PartCategory | 'all'; label: string; icon: string }[] = [
   { id: 'all', label: 'ALL', icon: '📦' },
@@ -191,7 +189,9 @@ const INITIAL_COMPONENTS: ComponentEntry[] = [
   },
 ];
 
-export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
+import { useChatStore } from '@/stores/chat-store';
+
+export function ComponentLibrary() {
   const {
     isOpen,
     closeLibrary,
@@ -205,7 +205,15 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
     setSearching,
   } = useComponentLibraryStore();
 
+  const { setPendingPrompt, openDrawer } = useChatStore();
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onAddToChat = useCallback((componentName: string, specs?: string) => {
+    const msg = `Add a ${componentName} to the current configuration. Target specs: ${specs || 'N/A'}.`;
+    setPendingPrompt(msg);
+    closeLibrary();
+    openDrawer();
+  }, [setPendingPrompt, closeLibrary, openDrawer]);
   const [hasSearched, setHasSearched] = useState(false);
 
   // Initialize with curated components
@@ -309,10 +317,10 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#374151] bg-[#1a1b1e]">
         <div className="flex items-center gap-2">
           <Package className="w-3.5 h-3.5 text-[#facc15]" />
-          <span className="text-[10px] font-mono font-bold tracking-wider text-[#facc15]">
+          <span className="text-sm font-semibold tracking-wider text-[#facc15]">
             PARTS CATALOG
           </span>
-          <span className="text-[8px] font-mono text-[#6b7280]">
+          <span className="text-xs text-[#6b7280] font-medium ml-1">
             ({filteredComponents.length} items)
           </span>
         </div>
@@ -333,7 +341,7 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder="Search components, e.g. 'NEMA 17', 'IMU', 'ESP32'..."
-            className="w-full pl-7 pr-3 py-1.5 bg-[#111] border border-[#374151] rounded text-[10px] font-mono text-[#f3f4f6] placeholder:text-[#4b5563] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
+            className="w-full pl-7 pr-3 py-1.5 bg-[#111] border border-[#374151] rounded text-sm text-[#f3f4f6] placeholder:text-[#4b5563] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
           />
           {isSearching && (
             <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#60a5fa] animate-spin" />
@@ -346,7 +354,7 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
               setComponents(INITIAL_COMPONENTS);
               setHasSearched(false);
             }}
-            className="mt-1 text-[7px] font-mono text-[#60a5fa] hover:text-[#93bbfc] transition-colors"
+            className="mt-1 text-xs text-[#60a5fa] font-medium hover:text-[#93bbfc] transition-colors"
           >
             ← Back to catalog
           </button>
@@ -362,16 +370,16 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
             <button
               key={cat.id}
               onClick={() => { playClickSound(true); setCategory(cat.id); }}
-              className={`shrink-0 px-2 py-1 rounded text-[7px] font-mono font-bold tracking-wider transition-all flex items-center gap-1 ${
+              className={`shrink-0 px-3 py-1.5 rounded text-xs font-semibold tracking-wider transition-all flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-[#374151] text-[#f3f4f6] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
                   : 'text-[#6b7280] hover:text-[#9ca3af] hover:bg-[#1e1f22]'
               }`}
             >
-              <span className="text-[9px]">{cat.icon}</span>
+              <span className="text-sm">{cat.icon}</span>
               {cat.label}
               {count > 0 && (
-                <span className={`text-[6px] px-1 rounded-full ${isActive ? 'bg-[#4b5563] text-[#f3f4f6]' : 'bg-[#1e1f22] text-[#6b7280]'}`}>
+                <span className={`text-[10px] px-1.5 rounded-full ${isActive ? 'bg-[#4b5563] text-[#f3f4f6]' : 'bg-[#1e1f22] text-[#6b7280]'}`}>
                   {count}
                 </span>
               )}
@@ -382,7 +390,7 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
 
       {/* Searching Animation */}
       {isSearching && (
-        <div className="px-4 py-3 flex items-center gap-2 text-[10px] font-mono text-[#60a5fa] animate-pulse">
+        <div className="px-4 py-3 flex items-center gap-2 text-xs font-semibold text-[#60a5fa] animate-pulse">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           SEARCHING SUPPLIERS...
         </div>
@@ -403,10 +411,10 @@ export function ComponentLibrary({ onAddToChat }: ComponentLibraryProps) {
         {filteredComponents.length === 0 && !isSearching && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Package className="w-8 h-8 text-[#374151] mb-2" />
-            <span className="text-[10px] font-mono text-[#6b7280]">
+            <span className="text-sm font-semibold text-[#6b7280]">
               No components found
             </span>
-            <span className="text-[8px] font-mono text-[#4b5563] mt-1">
+            <span className="text-xs text-[#4b5563] mt-1">
               Try a different search or category
             </span>
           </div>

@@ -65,7 +65,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
               className={`osc-led active shrink-0 ${stockCfg.animate ? 'animate-pulse-dot' : ''}`}
               style={{ '--led-color': catColor } as React.CSSProperties}
             />
-            <span className="text-[10px] font-mono font-bold text-[#f3f4f6] leading-tight truncate">
+            <span className="text-sm font-semibold font-sans text-[#f3f4f6] leading-tight truncate">
               {component.name}
             </span>
           </div>
@@ -89,7 +89,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
         {/* Row 2: Category badge */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className="px-1.5 py-0.5 rounded text-[7px] font-mono font-bold uppercase tracking-wider"
+            className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
             style={{ background: `${catColor}20`, color: catColor, border: `1px solid ${catColor}40` }}
           >
             {component.category.replace('_', ' ')}
@@ -100,7 +100,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
               className={`inline-block w-[5px] h-[5px] rounded-full ${stockCfg.animate ? 'animate-pulse-dot' : ''}`}
               style={{ background: stockCfg.color, boxShadow: `0 0 4px ${stockCfg.color}60` }}
             />
-            <span className="text-[6px] font-mono font-bold tracking-widest" style={{ color: stockCfg.color }}>
+            <span className="text-[10px] font-semibold tracking-widest" style={{ color: stockCfg.color }}>
               {stockCfg.label}
             </span>
           </span>
@@ -111,7 +111,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
           {topSpecs.map(([key, val]) => (
             <span
               key={key}
-              className="px-1.5 py-0.5 rounded text-[7px] font-mono bg-[#111] border border-[#374151] text-[#9ca3af]"
+              className="px-2 py-1 rounded text-xs bg-[#111] border border-[#374151] text-[#9ca3af] font-medium"
               title={`${key}: ${val}`}
             >
               {val}
@@ -123,15 +123,15 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
         <div className="flex items-center justify-between pt-1 border-t border-[#374151]">
           {bestPrice ? (
             <div className="flex items-center gap-1">
-              <span className="text-[11px] font-mono font-bold text-[#4ade80]">
+              <span className="text-sm font-semibold text-[#4ade80]">
                 ${bestPrice.price.toFixed(2)}
               </span>
-              <span className="text-[7px] font-mono text-[#6b7280]">
+              <span className="text-xs text-[#6b7280]">
                 via {bestPrice.supplier}
               </span>
             </div>
           ) : (
-            <span className="text-[8px] font-mono text-[#6b7280]">Price TBD</span>
+            <span className="text-xs text-[#6b7280]">Price TBD</span>
           )}
 
           <div className="flex items-center gap-1">
@@ -141,7 +141,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
                 playClickSound(true);
                 setExpandedCard(isExpanded ? null : component.id);
               }}
-              className="osc-button px-1.5 py-0.5 text-[7px] gap-0.5"
+              className="osc-button px-2 py-1 text-xs gap-1 font-semibold"
             >
               {isExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
               {isExpanded ? 'LESS' : 'MORE'}
@@ -152,7 +152,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
                 playConnectSound();
                 onAddToChat(component.name);
               }}
-              className="osc-button px-1.5 py-0.5 text-[7px] gap-0.5"
+              className="osc-button px-2 py-1 text-xs gap-1 font-semibold"
               style={{ borderTopColor: '#4ade80', borderTopWidth: '2px' }}
             >
               <Plus className="w-2.5 h-2.5 text-[#4ade80]" />
@@ -166,20 +166,20 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
       {isExpanded && (
         <div className="px-3 pb-3 space-y-2 border-t border-[#374151] pt-2 animate-fade-in">
           {/* Description */}
-          <p className="text-[9px] font-mono text-[#9ca3af] leading-relaxed">
+          <p className="text-sm text-[#9ca3af] leading-relaxed">
             {component.description}
           </p>
 
           {/* Full Specs Table */}
           <div className="space-y-0.5">
-            <span className="text-[7px] font-mono font-bold text-[#6b7280] tracking-widest uppercase">
+            <span className="text-[10px] font-semibold text-[#6b7280] tracking-widest uppercase">
               Specifications
             </span>
             <div className="bg-[#111] rounded border border-[#374151] divide-y divide-[#374151]">
               {Object.entries(component.specs).map(([key, val]) => (
                 <div key={key} className="flex items-center justify-between px-2 py-1">
-                  <span className="text-[8px] font-mono text-[#6b7280]">{key}</span>
-                  <span className="text-[8px] font-mono text-[#f3f4f6] font-bold">{val}</span>
+                  <span className="text-xs text-[#6b7280]">{key}</span>
+                  <span className="text-xs text-[#f3f4f6] font-semibold">{val}</span>
                 </div>
               ))}
             </div>
@@ -188,7 +188,7 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
           {/* Multi-Supplier Pricing */}
           {component.pricing.length > 0 && (
             <div className="space-y-0.5">
-              <span className="text-[7px] font-mono font-bold text-[#6b7280] tracking-widest uppercase">
+              <span className="text-[10px] font-semibold text-[#6b7280] tracking-widest uppercase">
                 Supplier Pricing
               </span>
               <div className="bg-[#111] rounded border border-[#374151] divide-y divide-[#374151]">
@@ -202,10 +202,10 @@ export function ComponentCard({ component, onAddToChat }: ComponentCardProps) {
                           boxShadow: `0 0 3px ${p.inStock ? '#4ade8060' : '#ef444460'}`,
                         }}
                       />
-                      <span className="text-[8px] font-mono text-[#9ca3af]">{p.supplier}</span>
+                      <span className="text-xs text-[#9ca3af]">{p.supplier}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-mono font-bold text-[#4ade80]">
+                      <span className="text-sm font-semibold text-[#4ade80]">
                         ${p.price.toFixed(2)}
                       </span>
                       {p.supplierUrl && (
