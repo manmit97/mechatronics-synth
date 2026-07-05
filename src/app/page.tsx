@@ -4,8 +4,10 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useProjectStore } from '@/stores/project-store';
-import { Activity, Layers, ArrowRight, Cpu, Sparkles } from 'lucide-react';
+import { Activity, Layers, ArrowRight, Cpu, Sparkles, Box } from 'lucide-react';
 import { playClickSound, playConnectSound } from '@/utils/audio';
+import { ConceptLibraryToggle } from '@/components/chat/ConceptLibraryToggle';
+import { ComponentLibraryToggle } from '@/components/chat/ComponentLibraryToggle';
 
 const Scene3D = dynamic(
   () => import('@/components/three/Scene3D').then((m) => m.Scene3D),
@@ -31,6 +33,8 @@ function SceneLoadingPlaceholder() {
 export default function LandingPage() {
   const showWorkspace = useProjectStore((s) => s.showWorkspace);
   const setShowWorkspace = useProjectStore((s) => s.setShowWorkspace);
+  const show3DViewport = useProjectStore((s) => s.show3DViewport);
+  const setShow3DViewport = useProjectStore((s) => s.setShow3DViewport);
   const setPillar = useProjectStore((s) => s.setPillar);
 
   const handleStartDesigning = () => {
@@ -64,20 +68,37 @@ export default function LandingPage() {
               <ArrowRight className="w-4 h-4 rotate-180" />
               Return
             </button>
-            <div className="w-px h-5 bg-white/10" />
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span className="text-sm font-semibold text-white tracking-wide">
-                Mechatronics Lab Workspace
-              </span>
+            <div className="w-px h-5 bg-white/10 mx-2" />
+            
+            {/* Centered or flex-start section for Catalogues */}
+            <div className="flex items-center gap-2 mr-auto ml-2">
+              <ConceptLibraryToggle />
+              <ComponentLibraryToggle />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-             <span className="flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-             <span className="text-xs text-gray-400 font-medium tracking-widest">ENGINE ONLINE</span>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                playClickSound(false);
+                setShow3DViewport(!show3DViewport);
+              }}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors flex items-center gap-2 ${
+                show3DViewport 
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' 
+                  : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              {show3DViewport ? 'Hide 3D View' : 'Show 3D View'}
+            </button>
+            <div className="w-px h-4 bg-white/10" />
+            <div className="flex items-center gap-3">
+               <span className="flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+               <span className="text-xs text-gray-400 font-medium tracking-widest">ENGINE ONLINE</span>
+            </div>
           </div>
         </div>
 
@@ -85,17 +106,23 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-4">
           
           {/* Chat Panel Sidebar */}
-          <div className="flex-1 lg:flex-none w-full lg:w-[460px] xl:w-[500px] shrink-0 flex flex-col min-h-[300px] lg:min-h-0 glass-panel rounded-xl overflow-hidden relative">
+          <div className={`shrink-0 flex flex-col min-h-[300px] lg:min-h-0 glass-panel rounded-xl overflow-hidden relative transition-all duration-300 ${
+            show3DViewport 
+              ? 'flex-1 lg:flex-none w-full lg:w-[460px] xl:w-[500px]' 
+              : 'flex-1 w-full'
+          }`}>
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-20" />
             <ChatPanel isLandingPage />
           </div>
 
           {/* 3D Viewport */}
-          <div className="flex-1 relative min-h-[300px] lg:min-h-0 flex flex-col glass-panel-light rounded-xl overflow-hidden border border-white/5">
-            <div className="flex-1 relative z-10 w-full h-full bg-[#050505]/50">
-              <Scene3D />
+          {show3DViewport && (
+            <div className="flex-1 relative min-h-[300px] lg:min-h-0 flex flex-col glass-panel-light rounded-xl overflow-hidden border border-white/5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex-1 relative z-10 w-full h-full bg-[#050505]/50">
+                <Scene3D />
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>

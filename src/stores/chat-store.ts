@@ -24,6 +24,7 @@ interface ChatStoreState {
   currentContext: PageContext;
   quickActions: QuickAction[];
   pendingPrompt: string | null;
+  knobRotations: number[];
 
   toggleDrawer: () => void;
   openDrawer: () => void;
@@ -32,6 +33,7 @@ interface ChatStoreState {
   setCurrentContext: (page: PageContext) => void;
   setQuickActions: (actions: QuickAction[]) => void;
   setPendingPrompt: (prompt: string | null) => void;
+  setKnobRotations: (rotations: number[] | ((prev: number[]) => number[])) => void;
 }
 
 export const useChatStore = create<ChatStoreState>((set) => ({
@@ -39,6 +41,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   currentContext: 'landing',
   quickActions: QUICK_ACTIONS.filter((a) => a.contexts.includes('landing')),
   pendingPrompt: null,
+  knobRotations: [25, 50, 100],
 
   toggleDrawer: () => set((state) => ({ isOpen: !state.isOpen })),
   openDrawer: () => set({ isOpen: true }),
@@ -53,4 +56,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   setCurrentContext: (page) => set({ currentContext: page }),
   setQuickActions: (actions) => set({ quickActions: actions }),
   setPendingPrompt: (prompt) => set({ pendingPrompt: prompt }),
+  setKnobRotations: (update) => set((state) => ({
+    knobRotations: typeof update === 'function' ? update(state.knobRotations) : update,
+  })),
 }));

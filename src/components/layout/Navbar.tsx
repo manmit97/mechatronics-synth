@@ -70,6 +70,7 @@ const defaultNavLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const toggleDrawer = useChatStore((s) => s.toggleDrawer);
+  const { knobRotations, setKnobRotations } = useChatStore();
   const agentPhase = useProjectStore((s) => s.agentPhase);
   const pillar = useProjectStore((s) => s.pillar);
   const currentVersion = useDesignHistoryStore((s) => s.currentVersion);
@@ -96,6 +97,15 @@ export function Navbar() {
     const nextMuted = toggleAudioMute();
     setMuted(nextMuted);
     playClickSound(!nextMuted);
+  };
+
+  const handleKnobClick = (index: number) => {
+    setKnobRotations((prev: number[]) => {
+      const next = [...prev];
+      next[index] = (next[index] + 25) > 100 ? 0 : (next[index] + 25);
+      return next;
+    });
+    playClickSound(false);
   };
 
   const handleOpenSettings = () => {
@@ -187,36 +197,22 @@ export function Navbar() {
           {/* Right side controls panel */}
           <div className="flex items-center gap-3 mr-2">
             
-            {/* Sound / Mute Toggle switch & Settings block */}
+            {/* Settings button */}
             <div className="flex items-center gap-1.5 bg-[#1e1f22] p-1.5 rounded border border-[#111] relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]">
-              
-              {/* Audio Toggle */}
               <div className="flex flex-col items-center gap-0.5 relative pt-1">
                 <span 
-                  className={`osc-led ${muted ? 'active' : 'active'}`} 
-                  style={{ '--led-color': muted ? '#ef4444' : '#4ade80' } as React.CSSProperties}
+                  className={`osc-led active`} 
+                  style={{ '--led-color': '#9ca3af' } as React.CSSProperties}
                 />
                 <button
-                  onClick={handleMuteToggle}
-                  className="osc-button px-2.5 py-1.5 flex items-center gap-1.5"
-                  title={muted ? 'Unmute' : 'Mute'}
-                >
-                  {muted ? <VolumeX className="w-3.5 h-3.5 text-[#ef4444]" /> : <Volume2 className="w-3.5 h-3.5 text-[#4ade80]" />}
-                  <span className="font-mono text-[9px] tracking-tight">{muted ? 'MUTE' : 'AUDIO'}</span>
-                </button>
-              </div>
-
-              {/* Gear Button */}
-              <div className="flex flex-col items-center justify-end mt-2.5">
-                <button
                   onClick={handleOpenSettings}
-                  className="osc-button p-1.5 flex items-center justify-center animate-fade-in"
-                  title="System Audio Setup"
+                  className="osc-button px-3 py-1.5 flex items-center gap-1.5"
+                  title="System Settings"
                 >
-                  <Settings className="w-3.5 h-3.5 text-[#9ca3af] hover:text-[#f3f4f6] hover:rotate-45 transition-all" />
+                  <Settings className="w-3.5 h-3.5 text-[#9ca3af]" />
+                  <span className="font-mono text-[9px] tracking-tight">SYSTEM</span>
                 </button>
               </div>
-
             </div>
 
             {/* Version meter dial */}
@@ -244,20 +240,22 @@ export function Navbar() {
             )}
 
             {/* Chat drawer toggle */}
-            <div className="flex flex-col items-center gap-0.5 relative pt-1.5">
-              <span className="osc-led active" style={{ '--led-color': '#facc15' } as React.CSSProperties} />
-              <button
-                onClick={() => {
-                  playClickSound(true);
-                  toggleDrawer();
-                }}
-                className="osc-button osc-button-primary px-3 py-1.5 flex items-center gap-1.5"
-                style={{ borderTopColor: '#facc15' }}
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-[#facc15]" />
-                <span className="font-mono text-[10px] font-bold text-[#facc15]">AGENT</span>
-              </button>
-            </div>
+            {pathname !== '/' && (
+              <div className="flex flex-col items-center gap-0.5 relative pt-1.5">
+                <span className="osc-led active" style={{ '--led-color': '#facc15' } as React.CSSProperties} />
+                <button
+                  onClick={() => {
+                    playClickSound(true);
+                    toggleDrawer();
+                  }}
+                  className="osc-button osc-button-primary px-3 py-1.5 flex items-center gap-1.5"
+                  style={{ borderTopColor: '#facc15' }}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#facc15]" />
+                  <span className="font-mono text-[10px] font-bold text-[#facc15]">AGENT</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
@@ -270,7 +268,7 @@ export function Navbar() {
         >
           {/* Modal Box */}
           <div 
-            className="osc-chassis w-80 p-5 bg-[#1e1f22] relative shadow-2xl text-[#f3f4f6] border border-[#374151]"
+            className="osc-chassis w-96 p-5 bg-[#1e1f22] relative shadow-2xl text-[#f3f4f6] border border-[#374151]"
             onClick={(e) => e.stopPropagation()} 
           >
             {/* Structural metal panel screws */}
@@ -282,38 +280,69 @@ export function Navbar() {
             {/* Modal Title Decal */}
             <div className="text-center pb-3 border-b border-[#374151] mb-4">
               <span className="text-[10px] font-mono font-bold tracking-widest text-[#9ca3af] block">UTILITY SETUP</span>
-              <h2 className="text-xs font-bold font-mono tracking-wider text-[#f3f4f6] uppercase mt-1">AUDIO FREQUENCY TONES</h2>
+              <h2 className="text-xs font-bold font-mono tracking-wider text-[#f3f4f6] uppercase mt-1">SYSTEM SETTINGS</h2>
             </div>
 
-            {/* List of 5 profiles */}
-            <div className="space-y-2 mb-4 bg-[#121212] p-2 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-[#111]">
-              {([
-                { id: 'synth', label: '⚡ DIGITAL BEEP' },
-                { id: 'relay', label: '🔩 RELAY CLICK' },
-                { id: 'chiptune', label: '👾 CHIPTUNE' },
-                { id: 'hum', label: '🔋 MAINS HUM' },
-                { id: 'pneumatic', label: '🔌 SOLENOID HISS' },
-              ] as const).map((item) => {
-                const active = selectedTone === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setCurrentAudioTone(item.id);
-                      setSelectedTone(item.id);
-                      playClickSound(true);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded border font-mono text-[10px] flex items-center justify-between transition-all ${
-                      active 
-                        ? 'border-[#4ade80] bg-[#1e1f22] text-[#4ade80] font-bold shadow-[0_0_8px_rgba(74,222,128,0.2)]' 
-                        : 'border-[#374151] text-[#9ca3af] hover:bg-[#1a1b1e] hover:text-[#f3f4f6]'
-                    }`}
-                  >
-                    <span>{item.label}</span>
-                    {active && <span className="osc-led active scale-75 animate-pulse-dot" style={{ '--led-color': '#4ade80' } as React.CSSProperties} />}
-                  </button>
-                );
-              })}
+            {/* Display Settings */}
+            <div className="mb-5">
+              <h3 className="text-[10px] font-mono font-bold text-[#60a5fa] uppercase tracking-widest mb-3 border-b border-[#374151] pb-1">DISPLAY OVERRIDES</h3>
+              <div className="flex items-center justify-between bg-[#121212] p-3 rounded border border-[#111] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]">
+                {['TEXT SIZE', 'LINE SPACING', 'BRIGHTNESS'].map((label, idx) => (
+                  <div key={label} className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => handleKnobClick(idx)}>
+                    <div className="osc-knob osc-knob-sm transition-transform duration-200" style={{ transform: `rotate(${(knobRotations[idx] / 100) * 360}deg)` }}>
+                      <div className="osc-knob-indicator" />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[9px] font-semibold text-[#9ca3af] tracking-widest leading-none whitespace-nowrap">{label}</span>
+                      <span className="text-[10px] font-semibold text-[#60a5fa] mt-1.5 leading-none">{knobRotations[idx]}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Audio Settings */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between border-b border-[#374151] pb-1 mb-3">
+                <h3 className="text-[10px] font-mono font-bold text-[#4ade80] uppercase tracking-widest">AUDIO SETTINGS</h3>
+                <button
+                  onClick={handleMuteToggle}
+                  className="osc-button px-2 py-1 flex items-center gap-1"
+                  title={muted ? 'Unmute' : 'Mute'}
+                >
+                  {muted ? <VolumeX className="w-3 h-3 text-[#ef4444]" /> : <Volume2 className="w-3 h-3 text-[#4ade80]" />}
+                  <span className="font-mono text-[9px] tracking-tight">{muted ? 'MUTED' : 'ON'}</span>
+                </button>
+              </div>
+              <div className="space-y-2 bg-[#121212] p-2 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-[#111]">
+                {([
+                  { id: 'synth', label: '⚡ DIGITAL BEEP' },
+                  { id: 'relay', label: '🔩 RELAY CLICK' },
+                  { id: 'chiptune', label: '👾 CHIPTUNE' },
+                  { id: 'hum', label: '🔋 MAINS HUM' },
+                  { id: 'pneumatic', label: '🔌 SOLENOID HISS' },
+                ] as const).map((item) => {
+                  const active = selectedTone === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setCurrentAudioTone(item.id);
+                        setSelectedTone(item.id);
+                        playClickSound(true);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded border font-mono text-[10px] flex items-center justify-between transition-all ${
+                        active 
+                          ? 'border-[#4ade80] bg-[#1e1f22] text-[#4ade80] font-bold shadow-[0_0_8px_rgba(74,222,128,0.2)]' 
+                          : 'border-[#374151] text-[#9ca3af] hover:bg-[#1a1b1e] hover:text-[#f3f4f6]'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {active && <span className="osc-led active scale-75 animate-pulse-dot" style={{ '--led-color': '#4ade80' } as React.CSSProperties} />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Settings Actions Dialog */}
