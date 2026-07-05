@@ -152,27 +152,6 @@ export function Navbar() {
 
           {/* Pillar Badge + Nav Links */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Active pillar badge */}
-            {pillarConfig && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1 border border-[#111] bg-[#1e1f22] text-[#f3f4f6] rounded text-[10px] font-bold font-mono tracking-wider uppercase shadow-[inset_0_1px_3px_rgba(0,0,0,0.9)]"
-                style={{
-                  color: pillarConfig.accentColor,
-                  borderColor: pillarConfig.accentColor,
-                  boxShadow: `inset 0 1px 3px rgba(0,0,0,0.9), 0 0 8px ${pillarConfig.accentColor}20`
-                }}
-              >
-                {(() => {
-                  const PillarIcon = pillarIconMap[pillarConfig.icon] || Cpu;
-                  return <PillarIcon className="w-3 h-3" />;
-                })()}
-                {pillarConfig.name}
-              </div>
-            )}
-
-            {/* Vertical line indicator */}
-            {pillarConfig && <div className="h-5 w-px bg-[#4b5563] mx-1" />}
-
             {/* Nav links */}
             <div className="flex items-center gap-2.5">
               {navLinks.map(({ href, label, icon }) => {
