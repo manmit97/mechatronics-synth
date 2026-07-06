@@ -6,6 +6,7 @@ import { ChatHeader } from './ChatHeader';
 import { ChatFeed } from './ChatFeed';
 import { ChatInput } from './ChatInput';
 import { AlertTriangle } from 'lucide-react';
+import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }) {
   const { currentContext } = useChatStore();
@@ -19,6 +20,8 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
+      <ChatHistorySidebar isMockMode={engine.isMockMode} />
+      
       {/* Recessed cabinet chassis screws */}
       <div className="absolute top-2 left-2"><span className="screw" /></div>
       <div className="absolute top-2 right-2"><span className="screw" /></div>

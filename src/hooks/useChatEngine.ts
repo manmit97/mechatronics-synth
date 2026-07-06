@@ -13,6 +13,7 @@ import { parseGenerateDesignResult, parseRefineDesignResult, type GenerateDesign
 import { playClickSound, playKeyPressSound } from '@/utils/audio';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
 import { useComponentLibraryStore } from '@/stores/component-library-store';
+import { useChatHistoryStore } from '@/stores/chat-history-store';
 
 export interface LocalMessage {
   id: string;
@@ -124,29 +125,41 @@ export function useChatEngine() {
 
   const isAITyping = aiStatus === 'submitted' || aiStatus === 'streaming';
 
-  // ─── Session Persistence ────────────────────────────────────────────────
-  useEffect(() => {
-    try {
-      const savedAi = localStorage.getItem('ai-chat-messages');
-      if (savedAi) setMessages(JSON.parse(savedAi));
-      const savedMock = localStorage.getItem('mock-chat-messages');
-      if (savedMock) setMockMessages(JSON.parse(savedMock));
-    } catch (e) {
-      console.error('Failed to restore chat session', e);
-    }
-  }, [setMessages]);
+  // ─── Chat History Store Integration ─────────────────────────────────────
+  const { currentSessionId, sessions, createNewSession, updateCurrentSession } = useChatHistoryStore();
 
+  // Create initial session if none exists
   useEffect(() => {
-    if (aiMessages.length > 0) {
-      localStorage.setItem('ai-chat-messages', JSON.stringify(aiMessages));
+    if (!currentSessionId && sessions.length === 0) {
+      createNewSession(isMockMode);
     }
-  }, [aiMessages]);
+  }, [currentSessionId, sessions.length, createNewSession, isMockMode]);
 
+  // Load session when currentSessionId changes
   useEffect(() => {
-    if (mockMessages.length > 1 || (mockMessages.length === 1 && mockMessages[0].id !== '0')) {
-      localStorage.setItem('mock-chat-messages', JSON.stringify(mockMessages));
+    const session = sessions.find(s => s.id === currentSessionId);
+    if (session) {
+      if (session.isMockMode) {
+        setMockMessages(session.messages.length > 0 ? session.messages : [{ id: '0', role: 'assistant', content: getMockGreeting(), timestamp: new Date() }]);
+      } else {
+        setMessages(session.messages);
+      }
     }
-  }, [mockMessages]);
+  }, [currentSessionId]);
+
+  // Save AI messages to current session
+  useEffect(() => {
+    if (aiMessages.length > 0 && !isMockMode) {
+      updateCurrentSession(aiMessages, false);
+    }
+  }, [aiMessages, isMockMode, updateCurrentSession]);
+
+  // Save Mock messages to current session
+  useEffect(() => {
+    if (isMockMode && (mockMessages.length > 1 || (mockMessages.length === 1 && mockMessages[0].id !== '0'))) {
+      updateCurrentSession(mockMessages, true);
+    }
+  }, [mockMessages, isMockMode, updateCurrentSession]);
 
   // Detect mock mode on first load
   useEffect(() => {

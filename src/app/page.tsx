@@ -123,14 +123,7 @@ export default function LandingPage() {
               <Box className="w-3.5 h-3.5" />
               {show3DViewport ? 'Hide 3D View' : 'Show 3D View'}
             </button>
-            <div className="w-px h-4 bg-white/10" />
-            <div className="flex items-center gap-3">
-               <span className="flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-               <span className="text-xs text-gray-400 font-medium tracking-widest">ENGINE ONLINE</span>
-            </div>
+
           </div>
         </div>
 
