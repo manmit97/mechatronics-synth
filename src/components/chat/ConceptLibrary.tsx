@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Library, X, Search, ChevronRight, Activity, Cog, Workflow, Cpu, Layers, Truck, Plane, Monitor, Anchor, LucideIcon } from 'lucide-react';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
+import { useProjectStore } from '@/stores/project-store';
+import { usePathname } from 'next/navigation';
 import { CONCEPTS_CATALOGUE, MechatronicsDomain } from '@/data/mechatronics-library';
 import { playClickSound } from '@/utils/audio';
 
@@ -30,6 +32,10 @@ export function ConceptLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDomain, setActiveDomain] = useState<MechatronicsDomain | 'All'>('All');
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);
+  
+  const pathname = usePathname();
+  const showWorkspace = useProjectStore((s) => s.showWorkspace);
+  const isWorkspaceView = pathname === '/' && showWorkspace;
 
   if (!isOpen) return null;
 
@@ -43,7 +49,7 @@ export function ConceptLibrary() {
   const selectedConcept = CONCEPTS_CATALOGUE.find((c) => c.id === selectedConceptId);
 
   return (
-    <div className="absolute inset-0 z-30 flex bg-[#121212]/95 backdrop-blur-sm animate-fade-in text-white">
+    <div className={`absolute inset-x-0 bottom-0 z-50 flex bg-[#121212]/95 backdrop-blur-sm animate-fade-in text-white ${isWorkspaceView ? 'top-[80px]' : 'top-0'}`}>
       {/* Left Panel: Catalog Browser */}
       <div className="flex-1 flex flex-col border-r border-[#374151]">
         {/* Header */}

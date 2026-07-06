@@ -32,7 +32,12 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden">
       <Navbar />
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">{children}</main>
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        {children}
+        {/* Global Modals/Overlays */}
+        <ConceptLibrary />
+        <ComponentLibrary />
+      </main>
       <Footer />
       {/* Persistent chat system (not on landing — landing has inline chat) */}
       {!isLanding && (
@@ -41,10 +46,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           <ChatToggle />
         </>
       )}
-      
-      {/* Global Modals/Overlays */}
-      <ConceptLibrary />
-      <ComponentLibrary />
     </div>
   );
 }

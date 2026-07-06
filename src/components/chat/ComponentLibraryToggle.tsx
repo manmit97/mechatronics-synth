@@ -2,6 +2,7 @@
 
 import { Package } from 'lucide-react';
 import { useComponentLibraryStore } from '@/stores/component-library-store';
+import { useConceptLibraryStore } from '@/stores/concept-library-store';
 import { playClickSound } from '@/utils/audio';
 
 // ─── Component Library Toggle ───────────────────────────────────────────────
@@ -14,6 +15,9 @@ export function ComponentLibraryToggle() {
     <button
       onClick={() => {
         playClickSound(true);
+        if (!isOpen) {
+          useConceptLibraryStore.getState().closeLibrary();
+        }
         toggleLibrary();
       }}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold tracking-wide transition-all ${

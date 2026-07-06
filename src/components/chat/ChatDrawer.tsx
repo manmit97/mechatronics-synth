@@ -7,48 +7,24 @@ import { ChatPanel } from './ChatPanel';
 
 export function ChatDrawer() {
   const { isOpen, closeDrawer } = useChatStore();
-  const [drawerWidth, setDrawerWidth] = useState(450);
-  const isDragging = useRef(false);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const newWidth = window.innerWidth - e.clientX;
-      if (newWidth >= 320 && newWidth <= 800) {
-        setDrawerWidth(newWidth);
-      }
-    };
-    const handleMouseUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        document.body.style.cursor = 'default';
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
 
   if (!isOpen) return null;
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => { playClickSound(false); closeDrawer(); }} />
       <div 
-        className="fixed top-0 right-0 z-50 h-full osc-chassis animate-slide-in-right shadow-2xl flex flex-col border-l border-[#374151]"
-        style={{ width: `${drawerWidth}px`, maxWidth: '100vw' }}
+        className="fixed top-20 right-6 z-50 osc-chassis animate-slide-in-right shadow-2xl flex flex-col border border-[#374151] rounded-xl overflow-hidden"
+        style={{ 
+          width: '500px', 
+          height: '700px',
+          minWidth: '320px',
+          minHeight: '400px',
+          maxWidth: '90vw',
+          maxHeight: '85vh',
+          resize: 'both',
+          overflow: 'auto'
+        }}
       >
-        {/* Resize Handle */}
-        <div 
-          className="absolute top-0 left-0 w-2 h-full cursor-col-resize z-50 hover:bg-[#60a5fa]/20 transition-colors hidden md:block"
-          onMouseDown={() => {
-            isDragging.current = true;
-            document.body.style.cursor = 'col-resize';
-          }}
-        />
         <div className="absolute top-2 left-4"><span className="screw" /></div>
         <div className="absolute top-2 right-2"><span className="screw" /></div>
         <ChatPanel />

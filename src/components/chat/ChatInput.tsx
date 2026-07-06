@@ -56,7 +56,7 @@ export function ChatInput({
 
       {/* Lower Hardware Control Panel */}
       <div className="px-6 py-3 border-t border-[#374151] bg-[#1e1f22] flex flex-col gap-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center gap-3">
+        <div className="flex items-end gap-3">
           <textarea
             id="chat-input"
             ref={inputRef}
@@ -64,14 +64,14 @@ export function ChatInput({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={getPlaceholder()}
-            rows={1}
-            className="flex-1 resize-none bg-[#111] border border-[#374151] rounded px-3 py-2 text-sm font-sans text-[#f3f4f6] placeholder:text-[#6b7280] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
-            style={{ minHeight: '36px', maxHeight: '100px' }}
+            rows={2}
+            className="flex-1 resize bg-[#111] border border-[#374151] rounded px-3 py-2 text-sm font-sans text-[#f3f4f6] placeholder:text-[#6b7280] focus:outline-none focus:border-[#60a5fa] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)]"
+            style={{ minHeight: '60px', maxHeight: '400px' }}
           />
           <button
             onClick={handleSend}
             disabled={!currentInput.trim() || isTyping}
-            className="shrink-0 w-9 h-9 rounded bg-[#111] border border-[#374151] text-[#f3f4f6] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a1b1e] hover:text-[#60a5fa] active:translate-y-0.5 shadow-md border-t-[#60a5fa]"
+            className="shrink-0 w-9 h-9 rounded bg-[#111] border border-[#374151] text-[#f3f4f6] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a1b1e] hover:text-[#60a5fa] active:translate-y-0.5 shadow-md border-t-[#60a5fa] mb-1"
             style={{ borderTopWidth: currentInput.trim() && !isTyping ? '2px' : '1px' }}
           >
             <Send className="w-3.5 h-3.5" />

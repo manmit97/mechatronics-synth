@@ -1,13 +1,15 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useProjectStore } from '@/stores/project-store';
-import { Activity, Layers, ArrowRight, Cpu, Sparkles, Box } from 'lucide-react';
+import { Activity, Layers, ArrowRight, Cpu, Sparkles, Box, GripVertical } from 'lucide-react';
 import { playClickSound, playConnectSound } from '@/utils/audio';
 import { ConceptLibraryToggle } from '@/components/chat/ConceptLibraryToggle';
 import { ComponentLibraryToggle } from '@/components/chat/ComponentLibraryToggle';
+import { useConceptLibraryStore } from '@/stores/concept-library-store';
+import { useComponentLibraryStore } from '@/stores/component-library-store';
 
 const Scene3D = dynamic(
   () => import('@/components/three/Scene3D').then((m) => m.Scene3D),
@@ -37,6 +39,34 @@ export default function LandingPage() {
   const setShow3DViewport = useProjectStore((s) => s.setShow3DViewport);
   const setPillar = useProjectStore((s) => s.setPillar);
 
+  // Resize logic for IDE-style chat window
+  const [chatWidth, setChatWidth] = useState(460);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      // p-4 adds 16px padding on the left
+      const newWidth = e.clientX - 16;
+      if (newWidth >= 300 && newWidth <= window.innerWidth * 0.8) {
+        setChatWidth(newWidth);
+      }
+    };
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = 'default';
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   const handleStartDesigning = () => {
     playConnectSound();
     // Default to 'physical' pillar as a baseline to ensure the app works,
@@ -51,6 +81,8 @@ export default function LandingPage() {
   const handleBackToHome = () => {
     playClickSound(false);
     setShowWorkspace(false);
+    useConceptLibraryStore.getState().closeLibrary();
+    useComponentLibraryStore.getState().closeLibrary();
   };
 
   // ─── Workspace View (Configurator / Sim) ───────────────────────────────────
@@ -106,13 +138,34 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-4">
           
           {/* Chat Panel Sidebar */}
-          <div className={`shrink-0 flex flex-col min-h-[300px] lg:min-h-0 glass-panel rounded-xl overflow-hidden relative transition-all duration-300 ${
-            show3DViewport 
-              ? 'flex-1 lg:flex-none w-full lg:w-[460px] xl:w-[500px]' 
-              : 'flex-1 w-full'
-          }`}>
+          <div 
+            className={`shrink-0 flex flex-col min-h-[300px] lg:min-h-0 glass-panel rounded-xl overflow-hidden relative ${
+              show3DViewport 
+                ? 'lg:flex-none' 
+                : 'flex-1 w-full'
+            }`}
+            style={
+              show3DViewport
+                ? { width: `${chatWidth}px` }
+                : {}
+            }
+          >
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 z-20" />
             <ChatPanel isLandingPage />
+            
+            {/* IDE-style Drag Handle */}
+            {show3DViewport && (
+              <div 
+                className="absolute top-0 right-0 w-3 h-full cursor-col-resize z-50 flex items-center justify-center hover:bg-[#60a5fa]/20 group transition-colors"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  isDragging.current = true;
+                  document.body.style.cursor = 'col-resize';
+                }}
+              >
+                <div className="h-8 w-1 rounded-full bg-[#60a5fa]/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
           </div>
 
           {/* 3D Viewport */}

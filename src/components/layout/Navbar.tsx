@@ -292,8 +292,8 @@ export function Navbar() {
                     <div className="osc-knob osc-knob-sm transition-transform duration-200" style={{ transform: `rotate(${(knobRotations[idx] / 100) * 360}deg)` }}>
                       <div className="osc-knob-indicator" />
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[9px] font-semibold text-[#9ca3af] tracking-widest leading-none whitespace-nowrap">{label}</span>
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-[9px] font-semibold text-[#9ca3af] tracking-widest leading-tight mt-2">{label}</span>
                       <span className="text-[10px] font-semibold text-[#60a5fa] mt-1.5 leading-none">{knobRotations[idx]}%</span>
                     </div>
                   </div>

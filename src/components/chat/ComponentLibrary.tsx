@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, X, Package, Loader2 } from 'lucide-react';
 import { useComponentLibraryStore, type ComponentEntry } from '@/stores/component-library-store';
+import { useProjectStore } from '@/stores/project-store';
+import { usePathname } from 'next/navigation';
 import { ComponentCard } from './ComponentCard';
 import { playClickSound } from '@/utils/audio';
 import type { PartCategory } from '@/types/parts';
@@ -205,6 +207,10 @@ export function ComponentLibrary() {
     setSearching,
   } = useComponentLibraryStore();
 
+  const pathname = usePathname();
+  const showWorkspace = useProjectStore((s) => s.showWorkspace);
+  const isWorkspaceView = pathname === '/' && showWorkspace;
+
   const { setPendingPrompt, openDrawer } = useChatStore();
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -312,7 +318,7 @@ export function ComponentLibrary() {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col bg-[#121212]/95 backdrop-blur-sm animate-fade-in">
+    <div className={`absolute inset-x-0 bottom-0 z-50 flex flex-col bg-[#121212]/95 backdrop-blur-sm animate-fade-in ${isWorkspaceView ? 'top-[80px]' : 'top-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#374151] bg-[#1a1b1e]">
         <div className="flex items-center gap-2">
