@@ -59,7 +59,7 @@ export default function LandingPage() {
       <div className="flex-1 flex flex-col p-4 bg-mesh-workspace relative min-h-0 overflow-hidden">
         
         {/* Modern Header */}
-        <div className="flex items-center justify-between px-6 py-3 glass-panel rounded-xl mb-4 z-10">
+        <div className="flex items-center justify-between px-6 py-3 glass-panel rounded-xl mb-4 relative z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={handleBackToHome}

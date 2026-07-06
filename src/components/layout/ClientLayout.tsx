@@ -2,7 +2,7 @@
 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { ChatDrawer, ChatToggle } from '@/components/chat/ChatPanel';
+import { ChatDrawer, ChatToggle } from '@/components/chat/ChatDrawer';
 import { ConceptLibrary } from '@/components/chat/ConceptLibrary';
 import { ComponentLibrary } from '@/components/chat/ComponentLibrary';
 import { usePathname } from 'next/navigation';
