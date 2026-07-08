@@ -3,9 +3,7 @@
 // and web search. Falls back to mock responses when no API key is set.
 
 import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
-import { isAIEnabled } from '@/ai/engine/llm-client';
 import { computeTokenUsage, emptyTokenUsage } from '@/ai/engine/token-tracker';
-import { getMockGreeting, getMockResponse } from '@/ai/mock/mock-agent-responses';
 import { appGraph } from '@/ai/engine/graph-workflow';
 
 export const maxDuration = 60; // Allow up to 60s for complex generations
@@ -17,11 +15,6 @@ export async function POST(request: Request) {
       messages,
       context = {},
     } = body;
-
-    // ─── Fallback: Mock Mode ──────────────────────────────────────────────
-    if (!isAIEnabled()) {
-      return handleMockFallback(messages, context);
-    }
 
     // ─── Stream Response via LangGraph Orchestration ──────────────────────
     const stream = createUIMessageStream({
@@ -60,42 +53,3 @@ export async function POST(request: Request) {
   }
 }
 
-// ─── Mock Fallback Handler ──────────────────────────────────────────────────
-
-function handleMockFallback(
-  messages: Array<{ role: string; content: string }>,
-  context: Record<string, unknown>
-) {
-  const turnCount = messages?.filter((m: { role: string }) => m.role === 'user').length || 0;
-  const lastUserMessage = messages
-    ?.filter((m: { role: string }) => m.role === 'user')
-    .pop()?.content || '';
-
-  // If no messages, return greeting
-  if (turnCount === 0 || !lastUserMessage) {
-    return Response.json({
-      role: 'assistant',
-      content: getMockGreeting(),
-      isMockMode: true,
-      tokenUsage: emptyTokenUsage(),
-    });
-  }
-
-  // Use the existing mock response system
-  const response = getMockResponse(lastUserMessage, turnCount);
-
-  return Response.json({
-    role: 'assistant',
-    content: response.content,
-    parts: response.parts || null,
-    requirements: response.requirements || null,
-    isGenerating: response.isGenerating || false,
-    isComplete: response.isComplete || false,
-    isMockMode: true,
-    tokenUsage: {
-      ...emptyTokenUsage(),
-      requestCount: turnCount,
-    },
-    _catalogSize: (context.catalog as unknown[])?.length || 0,
-  });
-}

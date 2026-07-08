@@ -7,8 +7,6 @@ import { useConfiguratorStore } from '@/stores/configurator-store';
 import { useBOMStore } from '@/stores/bom-store';
 import { useDesignHistoryStore } from '@/stores/design-history-store';
 import { useTokenStore } from '@/stores/token-store';
-import { getMockGreeting, getMockResponse } from '@/ai/mock/mock-agent-responses';
-import { processRefinementRequest, formatCrossDomainImpacts } from '@/ai/mock/mock-refinement-engine';
 import { parseGenerateDesignResult, parseRefineDesignResult, type GenerateDesignResult, type RefineDesignResult } from '@/ai/engine/response-parser';
 import { playClickSound, playKeyPressSound } from '@/utils/audio';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
@@ -58,13 +56,6 @@ function getToolOutput(msg: UIMessage, toolName: string): unknown | null {
 }
 
 export function useChatEngine() {
-  const [isMockMode, setIsMockMode] = useState(false);
-  const [mockMessages, setMockMessages] = useState<LocalMessage[]>(() => [
-    { id: '0', role: 'assistant', content: getMockGreeting(), timestamp: new Date() },
-  ]);
-  const [mockInput, setMockInput] = useState('');
-  const [isMockTyping, setIsMockTyping] = useState(false);
-  const [mockTurnCount, setMockTurnCount] = useState(0);
   const [aiInput, setAIInput] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -75,7 +66,7 @@ export function useChatEngine() {
   const { catalog, addMultipleToCatalog, initializeConfig, addPart, clearCatalog } = useConfiguratorStore();
   const { recalculate } = useBOMStore();
   const { createSnapshot } = useDesignHistoryStore();
-  const { incrementSearches, setAIEnabled } = useTokenStore();
+  const { incrementSearches } = useTokenStore();
 
   // ─── AI Streaming Chat ───────────────────────────
   const {
@@ -116,10 +107,6 @@ export function useChatEngine() {
     },
     onError: (error) => {
       console.error('[Chat Error]', error);
-      if (error.message?.includes('OPENAI_API_KEY') || error.message?.includes('Failed to fetch')) {
-        setIsMockMode(true);
-        setAIEnabled(false);
-      }
     },
   } as Parameters<typeof useChat>[0]);
 
@@ -131,61 +118,25 @@ export function useChatEngine() {
   // Create initial session if none exists
   useEffect(() => {
     if (!currentSessionId && sessions.length === 0) {
-      createNewSession(isMockMode);
+      createNewSession(false);
     }
-  }, [currentSessionId, sessions.length, createNewSession, isMockMode]);
+  }, [currentSessionId, sessions.length, createNewSession]);
 
   // Load session when currentSessionId changes
   useEffect(() => {
     const session = sessions.find(s => s.id === currentSessionId);
     if (session) {
-      if (session.isMockMode) {
-        setMockMessages(session.messages.length > 0 ? session.messages : [{ id: '0', role: 'assistant', content: getMockGreeting(), timestamp: new Date() }]);
-      } else {
-        setMessages(session.messages);
-      }
+      setMessages(session.messages);
     }
   }, [currentSessionId]);
 
   // Save AI messages to current session
   useEffect(() => {
-    if (aiMessages.length > 0 && !isMockMode) {
+    if (aiMessages.length > 0) {
       updateCurrentSession(aiMessages, false);
     }
-  }, [aiMessages, isMockMode, updateCurrentSession]);
+  }, [aiMessages, updateCurrentSession]);
 
-  // Save Mock messages to current session
-  useEffect(() => {
-    if (isMockMode && (mockMessages.length > 1 || (mockMessages.length === 1 && mockMessages[0].id !== '0'))) {
-      updateCurrentSession(mockMessages, true);
-    }
-  }, [mockMessages, isMockMode, updateCurrentSession]);
-
-  // Detect mock mode on first load
-  useEffect(() => {
-    let cancelled = false;
-    async function checkAI() {
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [], context: {} }),
-        });
-        const data = await res.json();
-        if (!cancelled && data.isMockMode) {
-          setIsMockMode(true);
-          setAIEnabled(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setIsMockMode(true);
-          setAIEnabled(false);
-        }
-      }
-    }
-    checkAI();
-    return () => { cancelled = true; };
-  }, [setAIEnabled]);
 
   // ─── Design Generation Handler ────────────────────────────────────────
   const handleDesignGenerated = useCallback((result: Record<string, unknown>) => {
@@ -304,132 +255,22 @@ export function useChatEngine() {
     }
   }, [clearCatalog, initializeConfig, addMultipleToCatalog, addPart, recalculate, createSnapshot]);
 
-  // ─── Mock Mode Send Handler ───────────────────────────────────────────
-  const handleMockSend = useCallback(async () => {
-    if (!mockInput.trim() || isMockTyping) return;
-    const userMsg = mockInput.trim();
-    setMockInput('');
-    setMockTurnCount((t) => t + 1);
-    playClickSound(true);
-
-    const userMessage: LocalMessage = {
-      id: Date.now().toString(), role: 'user', content: userMsg, timestamp: new Date(),
-    };
-    setMockMessages((prev) => [...prev, userMessage]);
-    setIsMockTyping(true);
-
-    if (mockTurnCount === 0) setIdea(userMsg);
-
-    if (agentPhase === 'complete' && catalog.length > 0) {
-      await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
-      const result = processRefinementRequest(userMsg, catalog);
-      const impactText = formatCrossDomainImpacts(result.crossDomainImpacts);
-
-      if (result.partsRemoved.length > 0) {
-        const config = useConfiguratorStore.getState().config;
-        if (config) {
-          useConfiguratorStore.getState().setPlacedParts(config.parts.filter((p) => !result.partsRemoved.includes(p.partId)));
-        }
-        const filteredCatalog = useConfiguratorStore.getState().catalog.filter((p) => !result.partsRemoved.includes(p.id));
-        clearCatalog();
-        const ps = useProjectStore.getState();
-        if (ps.requirements) initializeConfig(ps.requirements.projectName, ps.requirements.description, ps.requirements);
-        addMultipleToCatalog(filteredCatalog);
-        filteredCatalog.forEach((part, i) => addPart(part.id, [(i % 4 - 1.5) * 0.8, 0, (Math.floor(i / 4) - 1) * 0.8]));
-      }
-
-      if (result.partsAdded.length > 0) {
-        addMultipleToCatalog(result.partsAdded);
-        const cc = useConfiguratorStore.getState().config;
-        if (cc) {
-          const n = cc.parts.length;
-          result.partsAdded.forEach((part, i) => addPart(part.id, [((n + i) % 4 - 1.5) * 0.8, 0, (Math.floor((n + i) / 4) - 1) * 0.8]));
-        }
-      }
-
-      if (result.partsModified.length > 0) {
-        const upd = useConfiguratorStore.getState().catalog.map((p) => {
-          const mod = result.partsModified.find((m) => m.partId === p.id);
-          return mod ? { ...p, ...mod.updates } : p;
-        });
-        clearCatalog();
-        const ps = useProjectStore.getState();
-        if (ps.requirements) initializeConfig(ps.requirements.projectName, ps.requirements.description, ps.requirements);
-        addMultipleToCatalog(upd);
-        upd.forEach((part, i) => addPart(part.id, [(i % 4 - 1.5) * 0.8, 0, (Math.floor(i / 4) - 1) * 0.8]));
-      }
-
-      const uc = useConfiguratorStore.getState().catalog;
-      const be = uc.map((p) => ({
-        partId: p.id, partName: p.name, category: p.category, sourceType: p.sourceType,
-        quantity: p.category === 'actuator' || p.category === 'wheel' ? 4 : 1,
-        unitCost: p.unitCost, totalCost: p.unitCost * (p.category === 'actuator' || p.category === 'wheel' ? 4 : 1),
-        manufacturingMethod: p.manufacturingMethod, sourcingUrl: p.sourcingUrl, supplierName: p.supplierName, leadTimeDays: p.leadTimeDays,
-      }));
-      recalculate(be);
-      const cfg = useConfiguratorStore.getState().config;
-      if (cfg) createSnapshot(`Refinement: ${result.intent}`, 'refinement', { config: cfg, catalog: uc, bom: be, costBreakdown: useBOMStore.getState().costBreakdown });
-
-      setMockMessages((prev) => [...prev, {
-        id: (Date.now() + 1).toString(), role: 'assistant', content: result.explanation + impactText,
-        timestamp: new Date(), isRefinement: true,
-        impactCards: result.crossDomainImpacts.map((impact) => ({ domain: impact.domain, severity: impact.severity, description: impact.description, recommendation: impact.recommendation })),
-      }]);
-      setIsMockTyping(false);
-      return;
-    }
-
-    await new Promise((r) => setTimeout(r, 1000 + Math.random() * 800));
-    const response = getMockResponse(userMsg, mockTurnCount);
-
-    setMockMessages((prev) => [...prev, {
-      id: (Date.now() + 1).toString(), role: 'assistant', content: response.content,
-      timestamp: new Date(), isGenerating: response.isGenerating, isDesignReady: response.isComplete,
-    }]);
-    setIsMockTyping(false);
-
-    if (response.parts && response.requirements) {
-      setRequirements(response.requirements);
-      addMultipleToCatalog(response.parts);
-      initializeConfig(response.requirements.projectName, response.requirements.description, response.requirements);
-      response.parts.forEach((part, i) => addPart(part.id, [(i % 4 - 1.5) * 0.8, 0, (Math.floor(i / 4) - 1) * 0.8]));
-      const be = response.parts.map((p) => ({
-        partId: p.id, partName: p.name, category: p.category, sourceType: p.sourceType,
-        quantity: p.category === 'actuator' || p.category === 'wheel' ? 4 : 1,
-        unitCost: p.unitCost, totalCost: p.unitCost * (p.category === 'actuator' || p.category === 'wheel' ? 4 : 1),
-        manufacturingMethod: p.manufacturingMethod, sourcingUrl: p.sourcingUrl, supplierName: p.supplierName, leadTimeDays: p.leadTimeDays,
-      }));
-      recalculate(be);
-      const cfg = useConfiguratorStore.getState().config;
-      if (cfg) createSnapshot('Initial design generated by AI', 'ai_generation', { config: cfg, catalog: response.parts, bom: be, costBreakdown: useBOMStore.getState().costBreakdown });
-      setAgentPhase('complete');
-    }
-  }, [mockInput, isMockTyping, mockTurnCount, agentPhase, catalog, setIdea, setRequirements, setAgentPhase, addMultipleToCatalog, initializeConfig, addPart, clearCatalog, recalculate, createSnapshot]);
-
   // ─── Unified Interface ────────────────────────────────────────────────
-  const currentInput = isMockMode ? mockInput : aiInput;
-  const isTyping = isMockMode ? isMockTyping : isAITyping;
+  const currentInput = aiInput;
+  const isTyping = isAITyping;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (isMockMode) {
-      setMockInput(e.target.value);
-    } else {
-      setAIInput(e.target.value);
-    }
+    setAIInput(e.target.value);
     playKeyPressSound();
   };
 
   const handleSend = useCallback(() => {
-    if (isMockMode) {
-      handleMockSend();
-    } else {
-      const text = aiInput.trim();
-      if (!text || isAITyping) return;
-      playClickSound(true);
-      setAIInput('');
-      sendMessage({ text });
-    }
-  }, [isMockMode, handleMockSend, aiInput, isAITyping, sendMessage]);
+    const text = aiInput.trim();
+    if (!text || isAITyping) return;
+    playClickSound(true);
+    setAIInput('');
+    sendMessage({ text });
+  }, [aiInput, isAITyping, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -442,39 +283,23 @@ export function useChatEngine() {
     if (pendingPrompt) {
       const prompt = pendingPrompt;
       setPendingPrompt(null);
-      if (isMockMode) {
-        setMockInput(prompt);
-        setTimeout(() => {
-          const submitEvent = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: false });
-          document.getElementById('chat-input')?.dispatchEvent(submitEvent);
-        }, 100);
-      } else {
-        setAIInput('');
-        sendMessage({ text: prompt });
-      }
+      setAIInput('');
+      sendMessage({ text: prompt });
     }
-  }, [pendingPrompt, isMockMode, setPendingPrompt, sendMessage]);
+  }, [pendingPrompt, setPendingPrompt, sendMessage]);
 
   const handleQuickAction = (prompt: string) => {
     playClickSound(true);
-    if (isMockMode) {
-      setMockInput(prompt);
-    } else {
-      setAIInput(prompt);
-    }
+    setAIInput(prompt);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const handleAddToChat = useCallback((componentName: string) => {
     const prompt = `I want to use a ${componentName} in my design`;
-    if (isMockMode) {
-      setMockInput(prompt);
-    } else {
-      setAIInput(prompt);
-    }
+    setAIInput(prompt);
     useComponentLibraryStore.getState().closeLibrary();
     setTimeout(() => inputRef.current?.focus(), 100);
-  }, [isMockMode]);
+  }, []);
 
   const handleImportConcept = useCallback((prompt: string) => {
     setPendingPrompt(prompt);
@@ -485,35 +310,29 @@ export function useChatEngine() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const displayMessages: LocalMessage[] = isMockMode
-    ? mockMessages
-    : (aiMessages.length > 0
-      ? aiMessages.map((m) => ({
-          id: m.id,
-          role: m.role as 'user' | 'assistant',
-          content: getMessageText(m),
-          timestamp: new Date(),
-          isDesignReady: hasToolResult(m, 'generate_design'),
-          isRefinement: hasToolResult(m, 'refine_design'),
-          impactCards: (() => {
-            const output = getToolOutput(m, 'refine_design');
-            if (output && typeof output === 'object' && (output as Record<string, unknown>).crossDomainImpacts) {
-              return (output as { crossDomainImpacts: ImpactCard[] }).crossDomainImpacts;
-            }
-            return undefined;
-          })(),
-        }))
-      : [{ id: '0', role: 'assistant' as const, content: getMockGreeting(), timestamp: new Date() }]
-    );
+  const displayMessages: LocalMessage[] = aiMessages.length > 0
+    ? aiMessages.map((m) => ({
+        id: m.id,
+        role: m.role as 'user' | 'assistant',
+        content: getMessageText(m),
+        timestamp: new Date(),
+        isDesignReady: hasToolResult(m, 'generate_design'),
+        isRefinement: hasToolResult(m, 'refine_design'),
+        impactCards: (() => {
+          const output = getToolOutput(m, 'refine_design');
+          if (output && typeof output === 'object' && (output as Record<string, unknown>).crossDomainImpacts) {
+            return (output as { crossDomainImpacts: ImpactCard[] }).crossDomainImpacts;
+          }
+          return undefined;
+        })(),
+      }))
+    : [];
 
   useEffect(() => {
     scrollToBottom();
   }, [displayMessages, scrollToBottom]);
 
   return {
-    isMockMode,
-    setIsMockMode,
-    setAIEnabled,
     displayMessages,
     currentInput,
     isTyping,

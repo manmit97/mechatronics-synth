@@ -10,12 +10,10 @@ interface TokenState {
   requestCount: number;
   searchCount: number;
   modelName: string;
-  isAIEnabled: boolean;
 
   addUsage: (prompt: number, completion: number) => void;
   incrementSearches: () => void;
   setModelName: (name: string) => void;
-  setAIEnabled: (enabled: boolean) => void;
   reset: () => void;
 }
 
@@ -30,7 +28,6 @@ export const useTokenStore = create<TokenState>((set) => ({
   requestCount: 0,
   searchCount: 0,
   modelName: 'gpt-4o',
-  isAIEnabled: true,
 
   addUsage: (prompt, completion) =>
     set((state) => {
@@ -52,8 +49,6 @@ export const useTokenStore = create<TokenState>((set) => ({
     set((state) => ({ searchCount: state.searchCount + 1 })),
 
   setModelName: (name) => set({ modelName: name }),
-
-  setAIEnabled: (enabled) => set({ isAIEnabled: enabled }),
 
   reset: () =>
     set({

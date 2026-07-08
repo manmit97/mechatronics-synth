@@ -4,7 +4,7 @@ import { useChatHistoryStore } from '@/stores/chat-history-store';
 import { Plus, MessageSquare, Trash2, X } from 'lucide-react';
 import { playClickSound } from '@/utils/audio';
 
-export function ChatHistorySidebar({ isMockMode }: { isMockMode: boolean }) {
+export function ChatHistorySidebar() {
   const { 
     sessions, 
     currentSessionId, 
@@ -19,7 +19,7 @@ export function ChatHistorySidebar({ isMockMode }: { isMockMode: boolean }) {
 
   const handleNewChat = () => {
     playClickSound(true);
-    createNewSession(isMockMode);
+    createNewSession(false);
   };
 
   const handleLoadSession = (id: string) => {

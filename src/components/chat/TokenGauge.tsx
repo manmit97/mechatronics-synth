@@ -13,7 +13,6 @@ export function TokenGauge({ isTyping = false }: { isTyping?: boolean }) {
     estimatedCostUsd,
     requestCount,
     searchCount,
-    isAIEnabled,
   } = useTokenStore();
 
   // Determine VU meter level (0-10 segments) based on cost
@@ -39,21 +38,6 @@ export function TokenGauge({ isTyping = false }: { isTyping?: boolean }) {
     return `$${n.toFixed(3)}`;
   };
 
-  if (!isAIEnabled) {
-    return (
-      <div className="flex items-center gap-2 select-none">
-        <div className="flex items-center gap-1">
-          <span
-            className="osc-led"
-            style={{ background: '#6b7280' }}
-          />
-          <span className="text-[7px] font-mono font-bold text-[#6b7280] tracking-widest">
-            OFFLINE MODE
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center gap-3 select-none" title={`Prompt: ${formatTokens(useTokenStore.getState().promptTokens)} | Completion: ${formatTokens(useTokenStore.getState().completionTokens)} | Requests: ${requestCount}`}>

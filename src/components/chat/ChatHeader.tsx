@@ -1,4 +1,4 @@
-import { Cog, Wifi, WifiOff, X, List } from 'lucide-react';
+import { Cog, Wifi, X, List } from 'lucide-react';
 import { ConceptLibraryToggle } from './ConceptLibraryToggle';
 import { ComponentLibraryToggle } from './ComponentLibraryToggle';
 import { playClickSound } from '@/utils/audio';
@@ -7,17 +7,11 @@ import { useChatHistoryStore } from '@/stores/chat-history-store';
 
 interface ChatHeaderProps {
   isLandingPage: boolean;
-  isMockMode: boolean;
-  setIsMockMode: (mock: boolean) => void;
-  setAIEnabled: (enabled: boolean) => void;
   currentContext: string;
 }
 
 export function ChatHeader({
   isLandingPage,
-  isMockMode,
-  setIsMockMode,
-  setAIEnabled,
   currentContext,
 }: ChatHeaderProps) {
   const { toggleSidebar } = useChatHistoryStore();
@@ -31,11 +25,6 @@ export function ChatHeader({
     checkout: '🛒 OUT',
   };
 
-  const handleToggleMode = () => {
-    playClickSound(true);
-    setIsMockMode(!isMockMode);
-    setAIEnabled(isMockMode);
-  };
 
   if (isLandingPage) {
     return (
@@ -47,15 +36,10 @@ export function ChatHeader({
         >
           <List className="w-4 h-4" />
         </button>
-        <button
-          onClick={handleToggleMode}
-          className={`osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold ${
-            isMockMode ? 'text-[#ef4444] border-t-[#ef4444]' : 'text-[#4ade80] border-t-[#4ade80]'
-          }`}
-        >
-          {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
-          {isMockMode ? 'OFFLINE' : 'ONLINE'}
-        </button>
+        <div className="osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#4ade80] border-t-[#4ade80]">
+          <Wifi className="w-3 h-3" />
+          ONLINE
+        </div>
       </div>
     );
   }
@@ -74,19 +58,14 @@ export function ChatHeader({
         <ConceptLibraryToggle />
         <ComponentLibraryToggle />
       </div>
-      <span className={`text-sm font-semibold tracking-wide ${isMockMode ? 'text-[#ef4444]' : 'text-[#4ade80]'}`}>
-        TERMINAL {isMockMode ? '// OFFLINE' : '// LIVE AI'} {'//'} {contextLabels[currentContext] || '💬 LOG'}
+      <span className="text-sm font-semibold tracking-wide text-[#4ade80]">
+        TERMINAL // LIVE AI {'//'} {contextLabels[currentContext] || '💬 LOG'}
       </span>
       <div className="flex items-center gap-2">
-        <button
-          onClick={handleToggleMode}
-          className={`osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold ${
-            isMockMode ? 'text-[#ef4444] border-t-[#ef4444]' : 'text-[#4ade80] border-t-[#4ade80]'
-          }`}
-        >
-          {isMockMode ? <WifiOff className="w-3 h-3" /> : <Wifi className="w-3 h-3" />}
-          {isMockMode ? 'OFFLINE' : 'ONLINE'}
-        </button>
+        <div className="osc-button px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#4ade80] border-t-[#4ade80]">
+          <Wifi className="w-3 h-3" />
+          ONLINE
+        </div>
         <button 
           onClick={() => { playClickSound(false); useChatStore.getState().closeDrawer(); }} 
           className="text-[#9ca3af] hover:text-[#f3f4f6] transition-colors"

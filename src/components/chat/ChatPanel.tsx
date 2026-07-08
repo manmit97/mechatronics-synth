@@ -20,7 +20,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden relative">
-      <ChatHistorySidebar isMockMode={engine.isMockMode} />
+      <ChatHistorySidebar />
       
       {/* Recessed cabinet chassis screws */}
       <div className="absolute top-2 left-2"><span className="screw" /></div>
@@ -28,24 +28,20 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
 
       <ChatHeader 
         isLandingPage={isLandingPage}
-        isMockMode={engine.isMockMode}
-        setIsMockMode={engine.setIsMockMode}
-        setAIEnabled={engine.setAIEnabled}
         currentContext={currentContext}
       />
 
       {/* AI Error Banner */}
-      {engine.aiError && !engine.isMockMode && (
+      {engine.aiError && (
         <div className="px-4 py-2 bg-[#ef4444]/10 border-b border-[#ef4444]/30 text-sm font-medium text-[#ef4444] flex items-center gap-2">
           <AlertTriangle className="w-3 h-3" />
-          AI Error: {engine.aiError.message}. Falling back to offline mode.
+          AI Error: {engine.aiError.message}
         </div>
       )}
 
       <ChatFeed 
         displayMessages={engine.displayMessages}
         isTyping={engine.isTyping}
-        isMockMode={engine.isMockMode}
         getStatusText={getStatusText}
         messagesEndRef={engine.messagesEndRef}
       />

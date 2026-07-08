@@ -10,7 +10,6 @@ import { useChatStore } from '@/stores/chat-store';
 interface ChatFeedProps {
   displayMessages: LocalMessage[];
   isTyping: boolean;
-  isMockMode: boolean;
   getStatusText: () => string;
   messagesEndRef: RefObject<HTMLDivElement | null>;
 }
@@ -18,7 +17,6 @@ interface ChatFeedProps {
 export function ChatFeed({
   displayMessages,
   isTyping,
-  isMockMode,
   getStatusText,
   messagesEndRef,
 }: ChatFeedProps) {
@@ -62,7 +60,7 @@ export function ChatFeed({
             ) : (
               <div className="text-[#4ade80] space-y-2 leading-relaxed">
                 <div className="text-xs text-[#4ade80]/60 font-semibold tracking-widest uppercase border-b border-[#4ade80]/20 pb-1">
-                  {isMockMode ? 'SYSTEM OUTPUT // OFFLINE MODE' : 'SYSTEM OUTPUT // AI TELEMETRY'}
+                  SYSTEM OUTPUT // AI TELEMETRY
                 </div>
                 <div
                   className={`prose prose-sm prose-invert max-w-none text-[#4ade80] [&_h2]:font-bold [&_h2]:uppercase [&_h2]:tracking-wider [&_h2]:text-[#4ade80] [&_h2]:mt-2 [&_h2]:border-b [&_h2]:border-[#4ade80]/20 [&_strong]:text-[#f3f4f6] [&_strong]:font-bold [&_code]:text-[#facc15] [&_code]:bg-[#111] [&_code]:px-1 [&_code]:rounded [&_code]:border [&_code]:border-[#374151] ${getFontSizeClass()} ${getLineHeightClass()} ${getBrightnessClass()} transition-all duration-300`}
@@ -104,7 +102,7 @@ export function ChatFeed({
         {isTyping && (
           <div className="flex items-center gap-2 text-xs text-[#4ade80]/60 font-sans font-semibold animate-pulse">
             <span className="osc-led active animate-pulse-dot" style={{ '--led-color': '#4ade80' } as React.CSSProperties} />
-            <span>{isMockMode ? 'ACQUIRING SIGNAL PARAMETERS...' : getStatusText()}</span>
+            <span>{getStatusText()}</span>
           </div>
         )}
         <div ref={messagesEndRef} />
