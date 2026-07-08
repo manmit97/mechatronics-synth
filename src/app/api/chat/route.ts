@@ -28,6 +28,8 @@ export async function POST(request: Request) {
             selectedPartId: context.selectedPartId || null,
             pillar: context.pillar || null,
             feedback: null,
+            versionHistory: context.versionHistory || [],
+            currentDesignVersion: context.currentDesignVersion || 0,
           };
 
           // Invoke the LangGraph workflow, passing the writer for real-time streaming

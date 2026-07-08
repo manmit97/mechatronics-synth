@@ -26,6 +26,8 @@ export async function supervisorNode(state: GraphStateData, config?: RunnableCon
     currentPage: state.currentPage,
     selectedPartId: state.selectedPartId,
     pillar: state.pillar,
+    versionHistory: state.versionHistory || [],
+    currentDesignVersion: state.currentDesignVersion || 0,
   });
 
   const augmentedPrompt = systemPrompt + '\\n\\n[SUPERVISOR] You are the main orchestrator. You have access to all tools. Analyze the user request. ' + (state.feedback ? `\\n\\n[FEEDBACK FROM EVALUATOR]: ${state.feedback}` : '');

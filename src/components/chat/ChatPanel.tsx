@@ -44,6 +44,7 @@ export function ChatPanel({ isLandingPage = false }: { isLandingPage?: boolean }
         isTyping={engine.isTyping}
         getStatusText={getStatusText}
         messagesEndRef={engine.messagesEndRef}
+        onEngageConfigurator={engine.engageConfigurator}
       />
 
       <ChatInput 

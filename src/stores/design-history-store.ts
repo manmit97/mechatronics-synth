@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import type { DesignVersion, DesignDiff, DesignSnapshot } from '@/types/design-history';
+import { persist } from 'zustand/middleware';
+import type { DesignVersion, DesignDiff, DesignSnapshot, VersionSummary } from '@/types/design-history';
 import type { RobotConfiguration } from '@/types/configuration';
 import type { PartDefinition } from '@/types/parts';
 import type { BOMEntry, CostBreakdown } from '@/types/bom';
@@ -13,10 +14,14 @@ interface DesignHistoryState {
   createSnapshot: (
     description: string,
     trigger: DesignVersion['trigger'],
-    snapshot: DesignSnapshot
+    snapshot: DesignSnapshot,
+    sourceMessageId?: string
   ) => void;
   restoreVersion: (version: number) => DesignSnapshot | null;
   getCurrentDiff: () => DesignDiff | null;
+  getVersionByMessageId: (messageId: string) => DesignVersion | undefined;
+  getVersionSummaries: () => VersionSummary[];
+  getVersion: (version: number) => DesignVersion | undefined;
   reset: () => void;
 }
 
@@ -78,48 +83,80 @@ function computeDiff(
   };
 }
 
-export const useDesignHistoryStore = create<DesignHistoryState>((set, get) => ({
-  versions: [],
-  currentVersion: 0,
+export const useDesignHistoryStore = create<DesignHistoryState>()(
+  persist(
+    (set, get) => ({
+      versions: [],
+      currentVersion: 0,
 
-  createSnapshot: (description, trigger, snapshot) => {
-    const state = get();
-    const prevSnapshot =
-      state.versions.length > 0
-        ? state.versions[state.versions.length - 1].snapshot
-        : null;
-    const diff = computeDiff(prevSnapshot, snapshot);
-    const version = state.versions.length + 1;
+      createSnapshot: (description, trigger, snapshot, sourceMessageId) => {
+        const state = get();
+        const prevSnapshot =
+          state.versions.length > 0
+            ? state.versions[state.versions.length - 1].snapshot
+            : null;
+        const diff = computeDiff(prevSnapshot, snapshot);
+        const version = state.versions.length + 1;
 
-    set({
-      versions: [
-        ...state.versions,
-        {
-          version,
-          timestamp: new Date().toISOString(),
-          description,
-          trigger,
-          snapshot,
-          diff,
-        },
-      ],
-      currentVersion: version,
-    });
-  },
+        set({
+          versions: [
+            ...state.versions,
+            {
+              version,
+              timestamp: new Date().toISOString(),
+              description,
+              trigger,
+              snapshot,
+              diff,
+              sourceMessageId,
+            },
+          ],
+          currentVersion: version,
+        });
+      },
 
-  restoreVersion: (version) => {
-    const state = get();
-    const target = state.versions.find((v) => v.version === version);
-    if (!target) return null;
-    set({ currentVersion: version });
-    return target.snapshot;
-  },
+      restoreVersion: (version) => {
+        const state = get();
+        const target = state.versions.find((v) => v.version === version);
+        if (!target) return null;
+        set({ currentVersion: version });
+        return target.snapshot;
+      },
 
-  getCurrentDiff: () => {
-    const state = get();
-    if (state.versions.length === 0) return null;
-    return state.versions[state.versions.length - 1].diff;
-  },
+      getCurrentDiff: () => {
+        const state = get();
+        if (state.versions.length === 0) return null;
+        return state.versions[state.versions.length - 1].diff;
+      },
 
-  reset: () => set({ versions: [], currentVersion: 0 }),
-}));
+      getVersionByMessageId: (messageId) => {
+        const state = get();
+        return state.versions.find((v) => v.sourceMessageId === messageId);
+      },
+
+      getVersion: (version) => {
+        const state = get();
+        return state.versions.find((v) => v.version === version);
+      },
+
+      getVersionSummaries: () => {
+        const state = get();
+        return state.versions.map((v) => ({
+          version: v.version,
+          description: v.description,
+          trigger: v.trigger,
+          partCount: v.snapshot.catalog.length,
+          totalCost: v.snapshot.costBreakdown.grandTotal,
+          totalWeight: v.snapshot.catalog.reduce((s, p) => s + p.weight, 0),
+          timestamp: v.timestamp,
+          partNames: v.snapshot.catalog.map((p) => p.name),
+        }));
+      },
+
+      reset: () => set({ versions: [], currentVersion: 0 }),
+    }),
+    {
+      name: 'design-history-storage',
+    }
+  )
+);

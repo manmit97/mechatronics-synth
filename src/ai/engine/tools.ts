@@ -303,6 +303,48 @@ function extractSupplier(url: string): string {
   return 'Unknown';
 }
 
+// ─── Tool: Compare Versions ─────────────────────────────────────────────────
+
+const compareVersionsInputSchema = z.object({
+  versionA: z.number().describe('First version number to compare'),
+  versionB: z.number().describe('Second version number to compare'),
+});
+
+export const compareVersionsTool = tool({
+  description: 'Compare two design versions to show parts added, removed, modified, cost and weight deltas. Use when the user asks to compare versions (e.g. "compare v1 and v2", "what changed in v3?").',
+  inputSchema: compareVersionsInputSchema,
+  execute: async (input: z.infer<typeof compareVersionsInputSchema>) => {
+    // Actual comparison logic runs on the client side via the onFinish handler
+    // This tool just passes through the version numbers for the client to resolve
+    return {
+      success: true as const,
+      action: 'compare_versions' as const,
+      versionA: input.versionA,
+      versionB: input.versionB,
+    };
+  },
+});
+
+// ─── Tool: Restore Version ──────────────────────────────────────────────────
+
+const restoreVersionInputSchema = z.object({
+  version: z.number().describe('Version number to restore'),
+  reason: z.string().describe('Brief reason for the restore, shown in version history'),
+});
+
+export const restoreVersionTool = tool({
+  description: 'Restore a previous design version. This creates a new version that is a copy of the target version (non-destructive — full history is preserved). Use when the user says "go back to v1", "restore v2", etc.',
+  inputSchema: restoreVersionInputSchema,
+  execute: async (input: z.infer<typeof restoreVersionInputSchema>) => {
+    return {
+      success: true as const,
+      action: 'restore_version' as const,
+      version: input.version,
+      reason: input.reason,
+    };
+  },
+});
+
 // ─── Export all tools as a map for streamText ───────────────────────────────
 
 export const allTools = {
@@ -310,4 +352,7 @@ export const allTools = {
   refine_design: refineDesignTool,
   search_components: searchComponentsTool,
   lookup_datasheet: lookupDatasheetTool,
+  compare_versions: compareVersionsTool,
+  restore_version: restoreVersionTool,
 };
+

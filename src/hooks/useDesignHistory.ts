@@ -10,7 +10,7 @@ import { useBOMStore } from '@/stores/bom-store';
  * that read from multiple stores to build full design snapshots.
  */
 export function useDesignHistory() {
-  const { versions, currentVersion, createSnapshot, restoreVersion, getCurrentDiff } =
+  const { versions, currentVersion, createSnapshot, restoreVersion, getCurrentDiff, getVersionSummaries } =
     useDesignHistoryStore();
 
   const catalog = useConfiguratorStore((s) => s.catalog);
@@ -21,14 +21,14 @@ export function useDesignHistory() {
   const { entries: bomEntries, costBreakdown, recalculate } = useBOMStore();
 
   const takeSnapshot = useCallback(
-    (description: string, trigger: 'ai_generation' | 'user_edit' | 'refinement' | 'rollback') => {
+    (description: string, trigger: 'ai_generation' | 'user_edit' | 'refinement' | 'rollback', messageId?: string) => {
       if (!config) return;
       createSnapshot(description, trigger, {
         config,
         catalog,
         bom: bomEntries,
         costBreakdown,
-      });
+      }, messageId);
     },
     [config, catalog, bomEntries, costBreakdown, createSnapshot]
   );
@@ -57,6 +57,7 @@ export function useDesignHistory() {
     takeSnapshot,
     goToVersion,
     getCurrentDiff,
+    getVersionSummaries,
     canUndo: currentVersion > 1,
     canRedo: false, // Simple linear history for now
   };

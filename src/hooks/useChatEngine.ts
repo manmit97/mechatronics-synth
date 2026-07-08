@@ -8,7 +8,7 @@ import { useBOMStore } from '@/stores/bom-store';
 import { useDesignHistoryStore } from '@/stores/design-history-store';
 import { useTokenStore } from '@/stores/token-store';
 import { parseGenerateDesignResult, parseRefineDesignResult, type GenerateDesignResult, type RefineDesignResult } from '@/ai/engine/response-parser';
-import { playClickSound, playKeyPressSound } from '@/utils/audio';
+import { playClickSound, playKeyPressSound, playConnectSound } from '@/utils/audio';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
 import { useComponentLibraryStore } from '@/stores/component-library-store';
 import { useChatHistoryStore } from '@/stores/chat-history-store';
@@ -23,6 +23,8 @@ export interface LocalMessage {
   isDesignReady?: boolean;
   isRefinement?: boolean;
   impactCards?: ImpactCard[];
+  designVersion?: number;        // Which design version this message created
+  designResult?: Record<string, unknown>;  // Raw generate_design tool output for ENGAGE CONFIGURATOR
 }
 
 export interface ImpactCard {
@@ -86,6 +88,8 @@ export function useChatEngine() {
           currentPage: currentContext,
           selectedPartId: null,
           pillar: useProjectStore.getState().pillar,
+          versionHistory: useDesignHistoryStore.getState().getVersionSummaries(),
+          currentDesignVersion: useDesignHistoryStore.getState().currentVersion,
         },
       },
     }),
@@ -98,11 +102,21 @@ export function useChatEngine() {
         }
         const genOutput = getToolOutput(message, 'generate_design');
         if (genOutput && typeof genOutput === 'object' && (genOutput as Record<string, unknown>).success) {
-          handleDesignGenerated(genOutput as Record<string, unknown>);
+          handleDesignGenerated(genOutput as Record<string, unknown>, message.id);
         }
         const refOutput = getToolOutput(message, 'refine_design');
         if (refOutput && typeof refOutput === 'object' && (refOutput as Record<string, unknown>).success) {
-          handleDesignRefined(refOutput as Record<string, unknown>);
+          handleDesignRefined(refOutput as Record<string, unknown>, message.id);
+        }
+        // Handle compare_versions tool result
+        const compareOutput = getToolOutput(message, 'compare_versions');
+        if (compareOutput && typeof compareOutput === 'object' && (compareOutput as Record<string, unknown>).success) {
+          handleCompareVersions(compareOutput as { versionA: number; versionB: number });
+        }
+        // Handle restore_version tool result
+        const restoreOutput = getToolOutput(message, 'restore_version');
+        if (restoreOutput && typeof restoreOutput === 'object' && (restoreOutput as Record<string, unknown>).success) {
+          handleRestoreVersion(restoreOutput as { version: number; reason: string }, message.id);
         }
       }
     },
@@ -140,7 +154,7 @@ export function useChatEngine() {
 
 
   // ─── Design Generation Handler ────────────────────────────────────────
-  const handleDesignGenerated = useCallback((result: Record<string, unknown>) => {
+  const handleDesignGenerated = useCallback((result: Record<string, unknown>, messageId?: string) => {
     try {
       const { parts, requirements } = parseGenerateDesignResult(result as unknown as GenerateDesignResult);
 
@@ -170,7 +184,7 @@ export function useChatEngine() {
       if (config) {
         createSnapshot('AI-generated design', 'ai_generation', {
           config, catalog: parts, bom: bomEntries, costBreakdown,
-        });
+        }, messageId);
       }
       setAgentPhase('complete');
     } catch (err) {
@@ -179,7 +193,7 @@ export function useChatEngine() {
   }, [setRequirements, addMultipleToCatalog, initializeConfig, addPart, recalculate, createSnapshot, setAgentPhase]);
 
   // ─── Design Refinement Handler ────────────────────────────────────────
-  const handleDesignRefined = useCallback((result: Record<string, unknown>) => {
+  const handleDesignRefined = useCallback((result: Record<string, unknown>, messageId?: string) => {
     try {
       const currentCatalog = useConfiguratorStore.getState().catalog;
       const parsed = parseRefineDesignResult(result as unknown as RefineDesignResult, currentCatalog);
@@ -249,12 +263,84 @@ export function useChatEngine() {
       if (config) {
         createSnapshot(`Refinement: ${parsed.intent}`, 'refinement', {
           config, catalog: updatedCatalog, bom: bomEntries, costBreakdown,
-        });
+        }, messageId);
       }
     } catch (err) {
       console.error('[Design Refinement Error]', err);
     }
   }, [clearCatalog, initializeConfig, addMultipleToCatalog, addPart, recalculate, createSnapshot]);
+
+  // ─── Version Compare Handler ──────────────────────────────────────────
+  const handleCompareVersions = useCallback((result: { versionA: number; versionB: number }) => {
+    // The LLM receives the tool result and narrates the comparison.
+    // We just need to log it; the data was already in the system prompt context.
+    console.log(`[Version Compare] v${result.versionA} vs v${result.versionB}`);
+  }, []);
+
+  // ─── Version Restore Handler (non-destructive — creates new version) ──
+  const handleRestoreVersion = useCallback((result: { version: number; reason: string }, messageId?: string) => {
+    try {
+      const historyStore = useDesignHistoryStore.getState();
+      const targetVersion = historyStore.getVersion(result.version);
+      if (!targetVersion) {
+        console.error(`[Restore] Version ${result.version} not found`);
+        return;
+      }
+
+      const snapshot = targetVersion.snapshot;
+
+      // Restore configurator state
+      clearCatalog();
+      const projectStore = useProjectStore.getState();
+      if (projectStore.requirements) {
+        initializeConfig(projectStore.requirements.projectName, projectStore.requirements.description, projectStore.requirements);
+      }
+      addMultipleToCatalog(snapshot.catalog);
+      useConfiguratorStore.getState().setConfig(snapshot.config);
+
+      // Re-place parts in 3D
+      const spacing = 0.8;
+      snapshot.catalog.forEach((part, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        addPart(part.id, [(col - 1.5) * spacing, 0, (row - 1) * spacing]);
+      });
+
+      // Restore BOM
+      recalculate(snapshot.bom);
+
+      // Create a NEW rollback version (non-destructive — option A)
+      const config = useConfiguratorStore.getState().config;
+      const costBreakdown = useBOMStore.getState().costBreakdown;
+      if (config) {
+        createSnapshot(
+          `Rollback to v${result.version}: ${result.reason}`,
+          'rollback',
+          { config, catalog: snapshot.catalog, bom: snapshot.bom, costBreakdown },
+          messageId
+        );
+      }
+
+      playConnectSound();
+    } catch (err) {
+      console.error('[Version Restore Error]', err);
+    }
+  }, [clearCatalog, initializeConfig, addMultipleToCatalog, addPart, recalculate, createSnapshot]);
+
+  // ─── Engage Configurator (load parts into 3D view) ────────────────────
+  const engageConfigurator = useCallback((designResult?: Record<string, unknown>) => {
+    playConnectSound();
+    const store = useProjectStore.getState();
+    if (!store.pillar) store.setPillar('physical');
+    store.setShowWorkspace(true);
+    store.setShow3DViewport(true);
+
+    // If configurator is empty but we have a design result, re-load parts
+    const configStore = useConfiguratorStore.getState();
+    if (designResult && (!configStore.config || configStore.config.parts.length === 0)) {
+      handleDesignGenerated(designResult);
+    }
+  }, [handleDesignGenerated]);
 
   // ─── Unified Interface ────────────────────────────────────────────────
   const currentInput = aiInput;
@@ -311,22 +397,35 @@ export function useChatEngine() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // ─── Build display messages with version info ─────────────────────────
   const displayMessages: LocalMessage[] = aiMessages.length > 0
-    ? aiMessages.map((m) => ({
-        id: m.id,
-        role: m.role as 'user' | 'assistant',
-        content: getMessageText(m),
-        timestamp: new Date(),
-        isDesignReady: hasToolResult(m, 'generate_design'),
-        isRefinement: hasToolResult(m, 'refine_design'),
-        impactCards: (() => {
-          const output = getToolOutput(m, 'refine_design');
-          if (output && typeof output === 'object' && (output as Record<string, unknown>).crossDomainImpacts) {
-            return (output as { crossDomainImpacts: ImpactCard[] }).crossDomainImpacts;
-          }
-          return undefined;
-        })(),
-      }))
+    ? aiMessages.map((m) => {
+        // Look up if this message created a design version
+        const linkedVersion = useDesignHistoryStore.getState().getVersionByMessageId(m.id);
+        // Extract raw generate_design output for ENGAGE CONFIGURATOR button
+        const genOutput = getToolOutput(m, 'generate_design');
+        const rawDesignResult = (genOutput && typeof genOutput === 'object' && (genOutput as Record<string, unknown>).success)
+          ? genOutput as Record<string, unknown>
+          : undefined;
+
+        return {
+          id: m.id,
+          role: m.role as 'user' | 'assistant',
+          content: getMessageText(m),
+          timestamp: new Date(),
+          isDesignReady: hasToolResult(m, 'generate_design'),
+          isRefinement: hasToolResult(m, 'refine_design'),
+          designVersion: linkedVersion?.version,
+          designResult: rawDesignResult,
+          impactCards: (() => {
+            const output = getToolOutput(m, 'refine_design');
+            if (output && typeof output === 'object' && (output as Record<string, unknown>).crossDomainImpacts) {
+              return (output as { crossDomainImpacts: ImpactCard[] }).crossDomainImpacts;
+            }
+            return undefined;
+          })(),
+        };
+      })
     : [{ id: '0', role: 'assistant' as const, content: getMockGreeting(), timestamp: new Date() }];
 
   useEffect(() => {
@@ -345,6 +444,7 @@ export function useChatEngine() {
     handleQuickAction,
     handleAddToChat,
     handleImportConcept,
+    engageConfigurator,
     messagesEndRef,
     inputRef,
   };

@@ -33,4 +33,17 @@ export interface DesignVersion {
   trigger: DesignTrigger;
   snapshot: DesignSnapshot;
   diff: DesignDiff;
+  sourceMessageId?: string;  // Chat message ID that created this version
+}
+
+/** Compact version summary for injecting into LLM context without full snapshots */
+export interface VersionSummary {
+  version: number;
+  description: string;
+  trigger: DesignTrigger;
+  partCount: number;
+  totalCost: number;
+  totalWeight: number;
+  timestamp: string;
+  partNames: string[];
 }

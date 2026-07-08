@@ -3,6 +3,7 @@ import { Annotation } from '@langchain/langgraph';
 import type { PartDefinition } from '@/types/parts';
 import type { RequirementsSpec } from '@/types/project';
 import type { ServicePillar } from '@/types/pillar';
+import type { VersionSummary } from '@/types/design-history';
 
 export const GraphState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -33,6 +34,15 @@ export const GraphState = Annotation.Root({
     reducer: (left, right) => right,
     default: () => null,
   }),
+  versionHistory: Annotation<VersionSummary[]>({
+    reducer: (left, right) => right,
+    default: () => [],
+  }),
+  currentDesignVersion: Annotation<number>({
+    reducer: (left, right) => right,
+    default: () => 0,
+  }),
 });
 
 export type GraphStateData = typeof GraphState.State;
+

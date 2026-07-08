@@ -141,6 +141,8 @@ When you generate a design or refine an existing one, you MUST invoke the approp
 - Use \`refine_design\` when modifying an existing design (swap, add, remove, optimize)
 - Use \`search_components\` when you need to look up real-time pricing, stock availability, or find alternatives
 - Use \`lookup_datasheet\` when you need detailed specifications from a component's datasheet
+- Use \`compare_versions\` when the user asks to compare two design versions
+- Use \`restore_version\` when the user asks to go back to / restore a previous design version
 
 ### Part Specification Rules
 1. Always use **real manufacturer part numbers** and **real supplier SKUs**
@@ -159,6 +161,13 @@ When you generate a design or refine an existing one, you MUST invoke the approp
 4. **Design Generation**: Call \`generate_design\` with a complete parts list + requirements spec.
 5. **Refinement**: After design is generated, help the user iterate. Always analyze cross-domain impacts when making changes.
 
+### Version Reference Rules
+1. When the user references a specific version (v1, v2, etc.), use the **Design Version History** in your context
+2. For comparison requests (e.g. "compare v1 and v2"), call \`compare_versions\` with both version numbers
+3. For restore requests (e.g. "go back to v1"), call \`restore_version\` with the target version number
+4. Always mention the version number (e.g. "v3") when generating or refining a design
+5. Each version is immutable — restoring a past version creates a NEW version that copies the old state
+
 ### Cross-Domain Impact Analysis
 When modifying a design, always analyze cascading effects across:
 - **Mechanical**: Structural changes, weight impact, mounting compatibility
@@ -174,6 +183,8 @@ interface DesignContext {
   currentPage: string;
   selectedPartId: string | null;
   pillar: ServicePillar | null;
+  versionHistory: import('@/types/design-history').VersionSummary[];
+  currentDesignVersion: number;
 }
 
 function buildContextBlock(context: DesignContext): string {
@@ -234,6 +245,34 @@ function buildContextBlock(context: DesignContext): string {
       parts.push(`## Currently Selected Part: ${selectedPart.name}`);
       parts.push(`Category: ${selectedPart.category}`);
       parts.push(`Specs: ${JSON.stringify(selectedPart.specs)}`);
+    }
+  }
+
+  // Design version history
+  if (context.versionHistory.length > 0) {
+    parts.push('');
+    parts.push('## Design Version History');
+    parts.push(`Current active version: **v${context.currentDesignVersion}**`);
+    parts.push('');
+    parts.push('| Version | Description | Parts | Cost | Weight | Trigger |');
+    parts.push('|---------|-------------|-------|------|--------|---------|');
+    // Show last 10 versions to avoid token bloat
+    const recentVersions = context.versionHistory.slice(-10);
+    recentVersions.forEach((v) => {
+      const triggerLabels: Record<string, string> = {
+        ai_generation: '🤖 AI Gen',
+        user_edit: '✏️ Edit',
+        refinement: '🔄 Refine',
+        ai_refinement: '🔄 AI Refine',
+        rollback: '⏪ Rollback',
+        simulation_driven: '📊 Sim',
+      };
+      parts.push(
+        `| v${v.version} | ${v.description} | ${v.partCount} | $${v.totalCost.toFixed(2)} | ${v.totalWeight}g | ${triggerLabels[v.trigger] || v.trigger} |`
+      );
+    });
+    if (context.versionHistory.length > 10) {
+      parts.push(`\n_...${context.versionHistory.length - 10} earlier versions omitted. Use compare_versions tool for full details._`);
     }
   }
 

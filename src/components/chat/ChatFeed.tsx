@@ -1,17 +1,18 @@
 import React, { RefObject } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, GitBranch } from 'lucide-react';
 import { type LocalMessage } from '@/hooks/useChatEngine';
 import { renderMarkdown } from '@/utils/markdown';
 import { ImpactCardComponent } from './ImpactCard';
 import { playClickSound } from '@/utils/audio';
-import { useProjectStore } from '@/stores/project-store';
 import { useChatStore } from '@/stores/chat-store';
+import { useDesignHistoryStore } from '@/stores/design-history-store';
 
 interface ChatFeedProps {
   displayMessages: LocalMessage[];
   isTyping: boolean;
   getStatusText: () => string;
   messagesEndRef: RefObject<HTMLDivElement | null>;
+  onEngageConfigurator: (designResult?: Record<string, unknown>) => void;
 }
 
 export function ChatFeed({
@@ -19,8 +20,10 @@ export function ChatFeed({
   isTyping,
   getStatusText,
   messagesEndRef,
+  onEngageConfigurator,
 }: ChatFeedProps) {
   const { knobRotations } = useChatStore();
+  const currentVersion = useDesignHistoryStore((s) => s.currentVersion);
 
   const getFontSizeClass = () => {
     const rot = knobRotations[0] || 0;
@@ -59,8 +62,30 @@ export function ChatFeed({
               </div>
             ) : (
               <div className="text-[#4ade80] space-y-2 leading-relaxed">
-                <div className="text-xs text-[#4ade80]/60 font-semibold tracking-widest uppercase border-b border-[#4ade80]/20 pb-1">
-                  SYSTEM OUTPUT // AI TELEMETRY
+                <div className="flex items-center justify-between border-b border-[#4ade80]/20 pb-1">
+                  <div className="text-xs text-[#4ade80]/60 font-semibold tracking-widest uppercase">
+                    SYSTEM OUTPUT // AI TELEMETRY
+                  </div>
+                  {/* Version badge — shown on messages that created a design version */}
+                  {msg.designVersion && (
+                    <button
+                      onClick={() => {
+                        playClickSound(true);
+                        onEngageConfigurator(msg.designResult);
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border ${
+                        msg.designVersion === currentVersion
+                          ? 'bg-[#60a5fa]/20 text-[#60a5fa] border-[#60a5fa]/40 shadow-[0_0_8px_rgba(96,165,250,0.3)]'
+                          : 'bg-[#374151]/50 text-[#9ca3af] border-[#4b5563]/50 hover:bg-[#60a5fa]/10 hover:text-[#60a5fa] hover:border-[#60a5fa]/30'
+                      }`}
+                    >
+                      <GitBranch className="w-3 h-3" />
+                      v{msg.designVersion}
+                      {msg.designVersion === currentVersion && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa] animate-pulse" />
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div
                   className={`prose prose-sm prose-invert max-w-none text-[#4ade80] [&_h2]:font-bold [&_h2]:uppercase [&_h2]:tracking-wider [&_h2]:text-[#4ade80] [&_h2]:mt-2 [&_h2]:border-b [&_h2]:border-[#4ade80]/20 [&_strong]:text-[#f3f4f6] [&_strong]:font-bold [&_code]:text-[#facc15] [&_code]:bg-[#111] [&_code]:px-1 [&_code]:rounded [&_code]:border [&_code]:border-[#374151] ${getFontSizeClass()} ${getLineHeightClass()} ${getBrightnessClass()} transition-all duration-300`}
@@ -72,9 +97,7 @@ export function ChatFeed({
                     <button 
                       onClick={() => {
                         playClickSound(true);
-                        const store = useProjectStore.getState();
-                        if (!store.pillar) store.setPillar('physical');
-                        store.setShowWorkspace(true);
+                        onEngageConfigurator(msg.designResult);
                       }}
                       className="osc-button px-4 py-2 flex items-center gap-2 osc-button-primary w-fit text-[#facc15]"
                       style={{ borderTopColor: '#facc15' }}
