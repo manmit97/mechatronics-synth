@@ -226,7 +226,7 @@ function SceneContent() {
 
 export function Scene3D({ className = '' }: { className?: string }) {
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`absolute inset-0 ${className}`}>
       <Canvas
         camera={{ position: [4, 3, 4], fov: 50 }}
         shadows

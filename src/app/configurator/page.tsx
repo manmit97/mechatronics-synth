@@ -11,7 +11,7 @@ import { playClickSound } from '@/utils/audio';
 const Scene3D = dynamic(
   () => import('@/components/three/Scene3D').then((m) => m.Scene3D),
   { ssr: false, loading: () => (
-    <div className="w-full h-full bg-[#000] flex items-center justify-center">
+    <div className="absolute inset-0 bg-[#000] flex items-center justify-center">
       <span className="text-xs font-mono text-[#facc15] animate-pulse">ACQUIRING 3D SIGNAL...</span>
     </div>
   ) }
