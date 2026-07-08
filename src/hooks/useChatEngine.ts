@@ -12,6 +12,7 @@ import { playClickSound, playKeyPressSound } from '@/utils/audio';
 import { useConceptLibraryStore } from '@/stores/concept-library-store';
 import { useComponentLibraryStore } from '@/stores/component-library-store';
 import { useChatHistoryStore } from '@/stores/chat-history-store';
+import { getMockGreeting } from '@/ai/mock/mock-agent-responses';
 
 export interface LocalMessage {
   id: string;
@@ -326,7 +327,7 @@ export function useChatEngine() {
           return undefined;
         })(),
       }))
-    : [];
+    : [{ id: '0', role: 'assistant' as const, content: getMockGreeting(), timestamp: new Date() }];
 
   useEffect(() => {
     scrollToBottom();
